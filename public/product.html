@@ -9,150 +9,153 @@
         body { font-family: -apple-system, system-ui, sans-serif; background: #f1f5f9; margin: 0; color: var(--text); }
         .container { max-width: 600px; margin: 0 auto; background: #fff; min-height: 100vh; position: relative; }
 
-        /* 左上角返回按钮 */
+        /* 返回按钮 */
         .back-nav { position: absolute; top: 15px; left: 15px; z-index: 100; }
         .back-btn { background: rgba(255,255,255,0.9); border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 20px; 
                     text-decoration: none; color: var(--text); font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        /* 图片轮播 */
+        /* 轮播区域 */
         .slider { width: 100%; aspect-ratio: 1/1; position: relative; overflow: hidden; background: #f8fafc; }
         .slider-track { display: flex; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); height: 100%; }
         .slider-item { min-width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         .slider-item img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(255,255,255,0.8); 
+                   border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #ddd; z-index: 10; font-weight: bold; }
+        .slider:hover .nav-btn { display: flex; }
+        .nav-prev { left: 10px; }
+        .nav-next { right: 10px; }
+
         .dots { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: center; gap: 6px; }
-        .dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(0,0,0,0.15); transition: 0.3s; }
+        .dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(0,0,0,0.15); transition: 0.3s; cursor: pointer; }
         .dot.active { background: var(--primary); width: 16px; }
 
-        /* 内容排版：左对齐与优化间距 */
+        /* 全屏查看层优化 */
+        #gallery { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; z-index: 2000; overflow: hidden; touch-action: none; cursor: grab; }
+        #gallery:active { cursor: grabbing; }
+        #galImg { position: absolute; transition: transform 0.1s ease-out; user-select: none; max-width: none; }
+        .gal-close { position: fixed; top: 20px; right: 20px; color: #fff; font-size: 30px; cursor: pointer; z-index: 2100; font-family: serif; }
+
         .content { padding: 30px 20px 100px; text-align: left; }
         .price-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 12px; color: #e11d48; }
         .price { font-size: 2.4rem; font-weight: 800; }
         .unit { font-size: 1.1rem; font-weight: 600; }
-        
         .title { font-size: 1.5rem; font-weight: 700; margin: 0 0 25px 0; line-height: 1.4; color: #0f172a; }
-        
         .tag-row { display: flex; gap: 10px; margin-bottom: 30px; }
         .tag { padding: 6px 16px; background: #eff6ff; border-radius: 8px; font-size: 1.05rem; color: var(--primary); font-weight: 700; }
         .tag.stock { background: #ecfdf5; color: #10b981; }
-
         .desc-section { border-top: 1px solid #f1f5f9; padding-top: 25px; }
-        .desc-label { font-size: 0.9rem; font-weight: 700; color: var(--sub); margin-bottom: 12px; display: block; letter-spacing: 0.5px; }
         .desc-text { font-size: 1.1rem; line-height: 1.8; color: #334155; white-space: pre-wrap; }
 
-        /* 右侧浮动图标：缩小尺寸 */
         .fab-group { position: fixed; right: 20px; bottom: 40px; display: flex; flex-direction: column; gap: 15px; }
         .fab { width: 46px; height: 46px; border-radius: 50%; background: #fff; border: 1px solid #e2e8f0; 
-               box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; 
-               cursor: pointer; font-size: 18px; color: var(--sub); transition: 0.2s; }
-        .fab:active { transform: scale(0.9); background: #f8fafc; }
-
-        /* 全屏与提示 */
-        #gallery { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 2000; }
-        #gallery img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; border-radius: 30px; font-size: 14px; display: none; z-index: 3000; }
+               box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 25px; border-radius: 30px; display: none; z-index: 3000; }
     </style>
 </head>
 <body>
-    <div id="toast" class="toast">链接已复制到剪贴板</div>
-    <div id="gallery" onclick="this.style.display='none'"><img id="galImg"></div>
+    <div id="toast" class="toast">链接已复制</div>
+    <div id="gallery">
+        <span class="gal-close" onclick="closeGal()">×</span>
+        <img id="galImg" draggable="false">
+    </div>
 
     <div class="container">
-        <nav class="back-nav">
-            <a href="index.html" class="back-btn">⬅ 返回列表</a>
-        </nav>
-
+        <nav class="back-nav"><a href="index.html" class="back-btn">⬅ 返回列表</a></nav>
         <div class="slider" id="slider">
-            <div class="slider-track" id="track"></div>
-            <div class="dots" id="dots"></div>
+            <div class="nav-btn nav-prev" onclick="changeSlide(-1)">❮</div>
+            <div class="nav-btn nav-next" onclick="changeSlide(1)">❯</div>
+            <div id="track" class="slider-track"></div>
+            <div id="dots" class="dots"></div>
         </div>
-
-        <div class="content" id="app">
-             <div style="padding:50px; text-align:center; color:#94a3b8">读取物品信息中...</div>
-        </div>
+        <div class="content" id="app"></div>
     </div>
 
     <div class="fab-group">
-        <div class="fab" onclick="copyLink()" title="复制分享链接">🔗</div>
-        <div class="fab" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="回到顶部">▲</div>
+        <div class="fab" onclick="copyLink()">🔗</div>
+        <div class="fab" onclick="window.scrollTo({top:0, behavior:'smooth'})">▲</div>
     </div>
 
     <script>
-        let currentIdx = 0;
-        let imgs = [];
+        let currentIdx = 0, imgs = [];
+        let scale = 1, posX = 0, posY = 0, isDragging = false, startX, startY;
         const pid = new URLSearchParams(location.search).get("id");
 
         async function load() {
-            try {
-                const res = await fetch(`/api/products?id=${pid}&t=${Date.now()}`);
-                const data = await res.json();
-                const p = data[0];
-                if(!p) {
-                    document.getElementById('app').innerHTML = '<div style="padding:50px; text-align:center;">物品不存在</div>';
-                    return;
-                }
-
-                imgs = (p.image_url || "").split(',').map(u => u.trim()).filter(Boolean);
-                
-                // 渲染轮播轨道
-                const track = document.getElementById('track');
-                track.innerHTML = imgs.length ? imgs.map(url => `
-                    <div class="slider-item"><img src="${url}" onclick="openGal('${url}')"></div>
-                `).join('') : '<div class="slider-item"><div style="color:#ccc">暂无图片</div></div>';
-
-                // 渲染指示点
-                document.getElementById('dots').innerHTML = imgs.length > 1 ? imgs.map((_, i) => `
-                    <div class="dot ${i===0?'active':''}"></div>
-                `).join('') : '';
-                
-                const unit = p.currency && p.currency.includes('/') ? p.currency : '';
-                
-                document.getElementById('app').innerHTML = `
-                    <div class="price-row"><span class="price">¥${p.price}</span><span class="unit">${unit}</span></div>
-                    <h1 class="title">${p.name}</h1>
-                    <div class="tag-row">
-                        <span class="tag">${p.category || '未分类'}</span>
-                        <span class="tag stock">库存: ${p.stock}</span>
-                    </div>
-                    <div class="desc-section">
-                        <span class="desc-label">详细说明</span>
-                        <div class="desc-text">${p.description || "该物品暂无详细描述。"}</div>
-                    </div>
-                `;
-
-                if(imgs.length > 1) initSlider();
-            } catch(e) {
-                document.getElementById('app').innerHTML = '<div style="padding:50px; text-align:center;">加载失败</div>';
-            }
+            const res = await fetch(`/api/products?id=${pid}&t=${Date.now()}`);
+            const data = await res.json();
+            const p = data[0]; if(!p) return;
+            imgs = (p.image_url || "").split(',').map(u => u.trim()).filter(Boolean);
+            document.getElementById('track').innerHTML = imgs.map(url => `<div class="slider-item"><img src="${url}" onclick="openGal('${url}')"></div>`).join('');
+            document.getElementById('dots').innerHTML = imgs.length > 1 ? imgs.map((_, i) => `<div class="dot ${i===0?'active':''}" onclick="goToSlide(${i})"></div>`).join('') : '';
+            const unit = p.currency && p.currency.includes('/') ? p.currency : '';
+            document.getElementById('app').innerHTML = `<div class="price-row"><span class="price">¥${p.price}</span><span class="unit">${unit}</span></div><h1 class="title">${p.name}</h1><div class="tag-row"><span class="tag">${p.category||'未分类'}</span><span class="tag stock">库存: ${p.stock}</span></div><div class="desc-section"><div class="desc-text">${p.description||"暂无描述"}</div></div>`;
+            if(imgs.length > 1) initTouch();
         }
 
-        function initSlider() {
-            let startX = 0;
+        function moveSlider() {
+            document.getElementById('track').style.transform = `translateX(-${currentIdx * 100}%)`;
+            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentIdx));
+        }
+        function changeSlide(dir) { currentIdx = (currentIdx + dir + imgs.length) % imgs.length; moveSlider(); }
+        function goToSlide(idx) { currentIdx = idx; moveSlider(); }
+
+        // --- 全屏放大与拖拽逻辑 ---
+        const gal = document.getElementById('gallery');
+        const galImg = document.getElementById('galImg');
+
+        function openGal(url) {
+            scale = 1; posX = 0; posY = 0;
+            galImg.src = url;
+            galImg.style.transform = `translate(-50%, -50%) scale(1)`;
+            galImg.style.left = '50%';
+            galImg.style.top = '50%';
+            gal.style.display = 'block';
+        }
+
+        function closeGal() { gal.style.display = 'none'; }
+
+        // 滚轮缩放
+        gal.onwheel = (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.15 : 0.15;
+            scale = Math.min(Math.max(0.5, scale + delta), 4);
+            updateTransform();
+        };
+
+        // 鼠标拖拽移动
+        gal.onmousedown = (e) => {
+            isDragging = true;
+            startX = e.clientX - posX;
+            startY = e.clientY - posY;
+        };
+
+        window.onmousemove = (e) => {
+            if (!isDragging) return;
+            posX = e.clientX - startX;
+            posY = e.clientY - startY;
+            updateTransform();
+        };
+
+        window.onmouseup = () => { isDragging = false; };
+
+        function updateTransform() {
+            galImg.style.transform = `translate(calc(-50% + ${posX}px), calc(-50% + ${posY}px)) scale(${scale})`;
+        }
+
+        function initTouch() {
+            let sX = 0;
             const slider = document.getElementById('slider');
-            const track = document.getElementById('track');
-            
-            slider.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive: true});
-            slider.addEventListener('touchend', e => {
-                const diff = startX - e.changedTouches[0].clientX;
-                if (Math.abs(diff) > 50) {
-                    if (diff > 0 && currentIdx < imgs.length - 1) currentIdx++;
-                    else if (diff < 0 && currentIdx > 0) currentIdx--;
-                    
-                    track.style.transform = `translateX(-${currentIdx * 100}%)`;
-                    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentIdx));
-                }
-            });
+            slider.ontouchstart = e => sX = e.touches[0].clientX;
+            slider.ontouchend = e => {
+                const diff = sX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1);
+            };
         }
 
-        function openGal(u) { document.getElementById('galImg').src = u; document.getElementById('gallery').style.display = 'flex'; }
-        
-        function copyLink() { 
-            navigator.clipboard.writeText(window.location.href).then(() => { 
-                const t = document.getElementById('toast'); 
-                t.style.display='block'; 
-                setTimeout(()=>t.style.display='none', 2000);
-            });
-        }
-        
+        function copyLink() { navigator.clipboard.writeText(window.location.href).then(() => { 
+            const t = document.getElementById('toast'); t.style.display='block'; setTimeout(()=>t.style.display='none', 2000);
+        });}
         load();
     </script>
 </body>
