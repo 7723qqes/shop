@@ -8,64 +8,49 @@
         :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --sub: #64748b; --danger: #e11d48; --safe: #10b981; --warn: #f59e0b; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
         
-        /* 毛玻璃导航 */
-        .header { 
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            padding: 20px 15px 5px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); 
-        }
+        /* 导航及搜索 */
+        .header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 20px 15px 5px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .header h1 { font-size: 1.4rem; margin: 0 0 15px 0; text-align: center; font-weight: 800; }
-        
         .search-box { max-width: 600px; margin: 0 auto 10px; }
-        .search-input { 
-            width: 100%; padding: 12px 16px; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; 
-            font-size: 16px; outline: none; background: rgba(255,255,255,0.5); transition: 0.3s; box-sizing: border-box; 
-        }
+        .search-input { width: 100%; padding: 12px 16px; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; font-size: 16px; outline: none; background: rgba(255,255,255,0.5); transition: 0.3s; box-sizing: border-box; }
         .search-input:focus { background: #fff; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); border-color: var(--primary); }
-
-        /* 搜索高亮 */
         .highlight { background-color: #fef08a; color: #854d0e; padding: 0 2px; border-radius: 2px; font-weight: bold; }
 
+        /* 分类按钮 */
         .categories { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
         @media (min-width: 600px) { .categories { justify-content: center; } }
-        .cat-btn { 
-            padding: 8px 18px; border-radius: 20px; border: none; background: #e2e8f0; 
-            color: var(--sub); cursor: pointer; white-space: nowrap; font-weight: 700; font-size: 14px; transition: 0.2s; 
-        }
+        .cat-btn { padding: 8px 18px; border-radius: 20px; border: none; background: #e2e8f0; color: var(--sub); cursor: pointer; white-space: nowrap; font-weight: 700; font-size: 14px; transition: 0.2s; }
         .cat-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
-        /* 骨架屏 */
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        .skeleton { background: linear-gradient(90deg, #eff1f3 25%, #e2e8f0 50%, #eff1f3 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
-
+        /* 列表网格 */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; padding: 15px; max-width: 1200px; margin: 0 auto; }
-        .card { 
-            background: #fff; border-radius: 16px; text-decoration: none; color: inherit; overflow: hidden; 
-            border: 1px solid rgba(0,0,0,0.03); display: flex; flex-direction: column; transition: 0.3s; 
-            animation: fadeIn 0.4s ease backwards; 
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: #fff; border-radius: 16px; text-decoration: none; color: inherit; overflow: hidden; border: 1px solid rgba(0,0,0,0.03); display: flex; flex-direction: column; transition: 0.3s; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.05); }
 
-        .img-box { width: 100%; aspect-ratio: 1/1; background: #f1f5f9; overflow: hidden; }
+        /* 高级感图片占位样式 */
+        .img-box { width: 100%; aspect-ratio: 1/1; background: #f1f5f9; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
-        .card:hover .img-box img { transform: scale(1.05); }
-        
+        .error-state { 
+            width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); color: #94a3b8; 
+        }
+        .error-state svg { width: 40px; height: 40px; margin-bottom: 8px; opacity: 0.4; }
+        .error-state span { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* 内容信息 */
         .info { padding: 12px; }
         .price { font-size: 1.3rem; font-weight: 800; color: var(--danger); margin-bottom: 4px; display: block; }
         .title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; height: 2.8em; overflow: hidden; margin-bottom: 8px; }
         
-        /* 库存状态 */
-        .meta { font-size: 0.85rem; display: flex; justify-content: space-between; font-weight: 700; }
-        .stock-tag { padding: 2px 6px; border-radius: 4px; }
-        .stock-low { color: var(--warn); background: #fffbeb; }
-        .stock-out { color: var(--danger); background: #fef2f2; }
-        .stock-ok { color: var(--safe); background: #f0fdf4; }
+        /* 库存标签 */
+        .meta { font-size: 0.85rem; display: flex; justify-content: space-between; font-weight: 700; align-items: center; }
+        .stock-tag { padding: 2px 8px; border-radius: 6px; font-size: 11px; }
+        .stock-low { color: var(--warn); background: #fffbeb; border: 1px solid #fef3c7; }
+        .stock-out { color: var(--danger); background: #fef2f2; border: 1px solid #fee2e2; }
+        .stock-ok { color: var(--safe); background: #f0fdf4; border: 1px solid #dcfce7; }
 
         .fab-group { position: fixed; right: 20px; bottom: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 200; }
-        .fab { 
-            width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 1px solid rgba(0,0,0,0.05); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; 
-        }
+        .fab { width: 44px; height: 44px; border-radius: 50%; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
         @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 10px; } }
     </style>
@@ -79,10 +64,7 @@
         <div id="categories" class="categories"></div>
     </div>
 
-    <div id="products" class="grid">
-        <div class="card"><div class="img-box skeleton"></div><div class="info"><div class="skeleton" style="height:20px;width:60%;margin-bottom:10px"></div><div class="skeleton" style="height:15px"></div></div></div>
-        <div class="card"><div class="img-box skeleton"></div><div class="info"><div class="skeleton" style="height:20px;width:60%;margin-bottom:10px"></div><div class="skeleton" style="height:15px"></div></div></div>
-    </div>
+    <div id="products" class="grid"></div>
 
     <div class="fab-group">
         <div class="fab" onclick="window.scrollTo({top:0, behavior:'smooth'})">▲</div>
@@ -93,8 +75,18 @@
         let rawData = [];
         let currentCat = '全部';
 
+        // 🖼️ 美化版报错样式模板
+        const errorPlaceholder = `
+            <div class="error-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                <span>No Image</span>
+            </div>`;
+
+        function handleImgError(img) {
+            img.parentElement.innerHTML = errorPlaceholder;
+        }
+
         async function init() {
-            // 优先读取本地缓存实现秒开
             const cached = localStorage.getItem('inventory_cache');
             if (cached) {
                 rawData = JSON.parse(cached);
@@ -139,16 +131,19 @@
             let filtered = rawData.filter(p => p.name.toLowerCase().includes(kw) && (currentCat === '全部' || (p.category || '未分类') === currentCat));
             
             document.getElementById('products').innerHTML = filtered.map((p, index) => {
-                const unit = p.currency && p.currency.includes('/') ? p.currency : '';
-                
-                // 库存状态逻辑
-                let stockClass = 'stock-ok', stockText = `存: ${p.stock}`;
-                if (parseInt(p.stock) === 0) { stockClass = 'stock-out'; stockText = '缺货'; }
-                else if (parseInt(p.stock) <= 2) { stockClass = 'stock-low'; stockText = '存:紧张'; }
+                const stock = Number(p.stock) || 0;
+                let stockClass = 'stock-ok', stockText = `存: ${stock}`;
+                if (stock === 0) { stockClass = 'stock-out'; stockText = '缺货'; }
+                else if (stock <= 2) { stockClass = 'stock-low'; stockText = '存:紧张'; }
+
+                const firstImg = (p.image_url || "").split(',')[0].trim();
+                const unit = (p.currency && p.currency.includes('/')) ? p.currency : '';
 
                 return `
-                <a href="product.html?id=${p.id}" class="card" style="animation-delay: ${index * 0.03}s">
-                    <div class="img-box"><img src="${(p.image_url||"").split(',')[0]}" loading="lazy"></div>
+                <a href="product.html?id=${p.id}" class="card">
+                    <div class="img-box">
+                        ${firstImg ? `<img src="${firstImg}" onerror="handleImgError(this)" loading="lazy">` : errorPlaceholder}
+                    </div>
                     <div class="info">
                         <span class="price">¥${p.price}<small style="font-size:0.7em;color:#999;margin-left:2px">${unit}</small></span>
                         <div class="title">${highlightText(p.name, kw)}</div>
