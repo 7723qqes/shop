@@ -5,12 +5,17 @@
   <title>商品详情</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: system-ui; padding: 20px; }
-    img { max-width: 300px; display: block; }
-    .price { color: #e11d48; font-weight: bold; }
+    body { font-family: system-ui; padding: 20px; line-height: 1.6; max-width: 600px; margin: 0 auto; }
+    img { width: 100%; max-width: 400px; display: block; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .price { color: #e11d48; font-weight: bold; font-size: 1.5em; margin: 10px 0; }
+    .stock-tag { background: #f0fdf4; color: #16a34a; padding: 4px 12px; border-radius: 15px; font-size: 0.9em; }
+    .out-of-stock { background: #fef2f2; color: #dc2626; }
+    .back-btn { display: inline-block; margin-bottom: 20px; text-decoration: none; color: #666; }
   </style>
 </head>
 <body>
+
+<a href="index.html" class="back-btn">← 返回列表</a>
 
 <div id="app">加载中…</div>
 
@@ -21,14 +26,24 @@
     .then(r => r.json())
     .then(list => {
       const p = list[0]
-      if (!p) return
+      if (!p) {
+        document.getElementById("app").innerHTML = "未找到该商品";
+        return
+      }
+
+      const stockStatus = p.stock > 0 
+        ? `<span class="stock-tag">✅ 库存充足 (${p.stock})</span>`
+        : `<span class="stock-tag out-of-stock">❌ 暂时缺货</span>`;
 
       document.getElementById("app").innerHTML = `
         <h1>${p.name}</h1>
         ${p.image_url ? `<img src="${p.image_url}">` : ""}
-        ${p.description ? `<p>${p.description}</p>` : ""}
         <p class="price">${p.currency}${p.price}</p>
-        ${p.stock !== null ? `<p>库存：${p.stock}</p>` : ""}
+        <p>${stockStatus}</p>
+        <div style="margin-top:20px; color:#444; border-top:1px solid #eee; pt:10px;">
+          <h3>商品介绍</h3>
+          <p>${p.description || "暂无详细介绍"}</p>
+        </div>
       `
     })
 </script>
