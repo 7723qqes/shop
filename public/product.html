@@ -5,51 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>商品详情</title>
   <style>
-    :root { --text-main: #111827; --text-sub: #6b7280; --border: #e5e7eb; }
+    :root { --text-main: #111827; --border: #e5e7eb; }
     body { font-family: -apple-system, system-ui, sans-serif; margin: 0; background: #fff; color: var(--text-main); }
     
     /* 图片展示区 */
-    .gallery { max-width: 600px; margin: 0 auto; background: #f9fafb; }
-    .main-stage { width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; }
+    .gallery { max-width: 600px; margin: 0 auto; background: #f9fafb; border-bottom: 1px solid var(--border); }
+    .main-stage { width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; background: #fff; }
     .main-stage img { width: 100%; height: 100%; object-fit: contain; }
     
-    /* 缩略图横条 */
-    .thumb-nav { display: flex; gap: 8px; padding: 12px; overflow-x: auto; white-space: nowrap; }
+    /* 缩略图栏 */
+    .thumb-nav { display: flex; gap: 10px; padding: 15px; overflow-x: auto; background: #fff; }
     .thumb { 
-      width: 60px; height: 60px; border-radius: 6px; cursor: pointer; 
-      object-fit: cover; border: 2px solid transparent; flex-shrink: 0;
+      width: 65px; height: 65px; border-radius: 8px; cursor: pointer; 
+      object-fit: cover; border: 2px solid transparent; flex-shrink: 0; transition: 0.2s;
     }
-    .thumb.active { border-color: #000; }
+    .thumb.active { border-color: #000; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-    /* 文字信息区 */
-    .info { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .price { font-size: 1.6rem; font-weight: bold; color: #000; margin-bottom: 8px; }
-    .title { font-size: 1.3rem; margin: 0 0 16px 0; line-height: 1.4; }
-    
-    /* 商品描述：保留空格和换行 */
-    .desc { 
-      font-size: 1rem; color: #4b5563; 
-      white-space: pre-wrap; 
-      line-height: 1.8; border-top: 1px solid var(--border); padding-top: 20px;
-    }
+    .info { max-width: 600px; margin: 0 auto; padding: 25px 20px; }
+    .price { font-size: 1.8rem; font-weight: 800; color: #e11d48; margin-bottom: 5px; }
+    .title { font-size: 1.4rem; margin: 0 0 20px 0; line-height: 1.4; font-weight: 700; }
+    .desc { font-size: 1rem; color: #4b5563; white-space: pre-wrap; line-height: 1.8; border-top: 1px solid var(--border); padding-top: 20px; }
 
-    /* 悬浮按钮 */
-    .fab-group { position: fixed; right: 16px; bottom: 24px; display: flex; flex-direction: column; gap: 12px; }
-    .fab { 
-      width: 48px; height: 48px; border-radius: 50%; background: #fff; 
-      border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; font-size: 20px;
-    }
+    .fab-group { position: fixed; right: 20px; bottom: 30px; display: flex; flex-direction: column; gap: 15px; }
+    .fab { width: 50px; height: 50px; border-radius: 50%; background: #fff; border: 1px solid var(--border); 
+           box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; 
+           cursor: pointer; text-decoration: none; font-size: 22px; }
 
-    .loading { text-align: center; padding: 100px; color: var(--text-sub); }
+    .loading { text-align: center; padding: 100px; color: #9ca3af; }
   </style>
 </head>
 <body>
 
-<div id="app" class="loading">正在加载商品...</div>
+<div id="app" class="loading">读取商品数据中...</div>
 
 <div class="fab-group">
-  <a href="index.html" class="fab" title="返回首页">🏠</a>
+  <a href="index.html" class="fab">🏠</a>
   <div id="toTop" class="fab" style="display:none" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</div>
 </div>
 
@@ -58,50 +48,51 @@
   const id = urlParams.get("id");
 
   if (!id) {
-    document.getElementById("app").innerHTML = "未找到商品 ID";
+    document.getElementById("app").innerHTML = "❌ 缺少商品ID";
   } else {
     fetch(`/api/products?id=${id}`)
       .then(res => res.json())
       .then(data => {
-        const product = data[0];
-        if (!product) {
-          document.getElementById("app").innerHTML = "该商品不存在";
+        const p = data[0];
+        if (!p) {
+          document.getElementById("app").innerHTML = "❌ 商品已下架";
           return;
         }
 
-        // --- 核心逻辑：直接从 image_url 列提取图片 ---
-        let imageList = [];
-        if (product.image_url) {
-          // 无论是一张还是多张（逗号隔开），都按逗号切分
-          imageList = product.image_url.split(',').map(item => item.trim());
-        }
+        // --- 增强版图片解析逻辑 ---
+        let rawUrl = p.image_url || "";
+        // 1. 去掉可能存在的换行符 2. 按逗号拆分 3. 过滤掉空字符串 4. 去掉前后空格
+        let imageList = rawUrl.replace(/\n/g, '').split(',').map(u => u.trim()).filter(u => u.length > 0);
+
+        console.log("解析到的图片列表:", imageList); // 开发者调试用
 
         document.getElementById("app").className = ""; 
         document.getElementById("app").innerHTML = `
           <div class="gallery">
             <div class="main-stage">
-              <img id="mainView" src="${imageList[0] || 'https://via.placeholder.com/400'}" alt="商品图">
+              <img id="mainView" src="${imageList[0] || ''}" onerror="this.src='https://via.placeholder.com/400?text=图片加载失败'">
             </div>
             ${imageList.length > 1 ? `
               <div class="thumb-nav">
                 ${imageList.map((url, index) => `
                   <img class="thumb ${index === 0 ? 'active' : ''}" 
                        src="${url}" 
-                       onclick="changeImg(this, '${url}')">
+                       onclick="changeImg(this, '${url.replace(/'/g, "\\'")}')">
                 `).join('')}
               </div>
             ` : ''}
           </div>
           
           <div class="info">
-            <div class="price">${product.currency} ${product.price}</div>
-            <h1 class="title">${product.name}</h1>
-            <div class="desc">${product.description || "暂无详情介绍"}</div>
+            <div class="price">${p.currency || '¥'} ${p.price}</div>
+            <h1 class="title">${p.name}</h1>
+            <div class="desc">${p.description || "暂无详情介绍"}</div>
           </div>
         `;
       })
       .catch(err => {
-        document.getElementById("app").innerHTML = "加载失败";
+        document.getElementById("app").innerHTML = "❌ 网络连接失败";
+        console.error(err);
       });
   }
 
