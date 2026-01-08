@@ -8,36 +8,37 @@
     :root { --text-main: #111827; --text-sub: #6b7280; --border: #e5e7eb; }
     body { font-family: -apple-system, system-ui, sans-serif; margin: 0; background: #fff; color: var(--text-main); }
     
-    /* 图片轮播 */
-    .gallery { max-width: 600px; margin: 0 auto; position: relative; }
-    .main-stage { width: 100%; aspect-ratio: 1/1; background: #f9fafb; display: flex; align-items: center; }
+    /* 图片展示区 */
+    .gallery { max-width: 600px; margin: 0 auto; background: #f9fafb; }
+    .main-stage { width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; }
     .main-stage img { width: 100%; height: 100%; object-fit: contain; }
     
-    .thumb-nav { display: flex; gap: 8px; padding: 12px; overflow-x: auto; }
+    /* 缩略图横条 */
+    .thumb-nav { display: flex; gap: 8px; padding: 12px; overflow-x: auto; white-space: nowrap; }
     .thumb { 
       width: 60px; height: 60px; border-radius: 6px; cursor: pointer; 
-      object-fit: cover; border: 2px solid transparent; 
+      object-fit: cover; border: 2px solid transparent; flex-shrink: 0;
     }
     .thumb.active { border-color: #000; }
 
-    /* 内容展示 */
+    /* 文字信息区 */
     .info { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .price { font-size: 1.5rem; font-weight: bold; margin: 0 0 8px 0; }
-    .title { font-size: 1.25rem; margin: 0 0 16px 0; color: var(--text-main); }
+    .price { font-size: 1.6rem; font-weight: bold; color: #000; margin-bottom: 8px; }
+    .title { font-size: 1.3rem; margin: 0 0 16px 0; line-height: 1.4; }
     
-    /* 纯文本描述：保留换行和空格 */
+    /* 商品描述：保留空格和换行 */
     .desc { 
-      font-size: 0.95rem; color: #4b5563; 
-      white-space: pre-wrap; /* 关键：让纯文本的换行生效 */
-      line-height: 1.7; border-top: 1px solid var(--border); padding-top: 20px;
+      font-size: 1rem; color: #4b5563; 
+      white-space: pre-wrap; 
+      line-height: 1.8; border-top: 1px solid var(--border); padding-top: 20px;
     }
 
-    /* 悬浮按钮组 */
+    /* 悬浮按钮 */
     .fab-group { position: fixed; right: 16px; bottom: 24px; display: flex; flex-direction: column; gap: 12px; }
     .fab { 
       width: 48px; height: 48px; border-radius: 50%; background: #fff; 
-      border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none;
+      border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; font-size: 20px;
     }
 
     .loading { text-align: center; padding: 100px; color: var(--text-sub); }
@@ -45,53 +46,83 @@
 </head>
 <body>
 
-<div id="app" class="loading">加载中...</div>
+<div id="app" class="loading">正在加载商品...</div>
 
 <div class="fab-group">
-  <a href="index.html" class="fab">🏠</a>
+  <a href="index.html" class="fab" title="返回首页">🏠</a>
   <div id="toTop" class="fab" style="display:none" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</div>
 </div>
 
 <script>
-  const id = new URLSearchParams(location.search).get("id");
+  // 1. 获取网址里的商品 ID
+  const urlParams = new URLSearchParams(location.search);
+  const id = urlParams.get("id");
 
-  fetch(`/api/products?id=${id}`)
-    .then(r => r.json())
-    .then(res => {
-      const p = res[0];
-      if (!p) return document.getElementById("app").innerHTML = "商品不存在";
+  if (!id) {
+    document.getElementById("app").innerHTML = "未找到商品 ID";
+  } else {
+    // 2. 请求接口获取数据
+    fetch(`/api/products?id=${id}`)
+      .then(res => res.json())
+      .then(data => {
+        const product = data[0];
+        if (!product) {
+          document.getElementById("app").innerHTML = "该商品不存在或已下架";
+          return;
+        }
 
-      // 兼容多图和单图
-      const imgs = Array.isArray(p.images) ? p.images : [p.image_url];
+        // --- 核心逻辑：处理图片地址 ---
+        let imageList = [];
+        if (product.images && product.images.trim() !== "") {
+          // 如果 images 字段有内容，用逗号切开
+          imageList = product.images.split(',').map(item => item.trim());
+        } else if (product.image_url) {
+          // 如果没有多图，就用原本的单张主图
+          imageList = [product.image_url];
+        }
 
-      document.getElementById("app").className = ""; // 移除 loading 类
-      document.getElementById("app").innerHTML = `
-        <div class="gallery">
-          <div class="main-stage">
-            <img id="view" src="${imgs[0] || ''}">
+        // 3. 渲染页面内容
+        document.getElementById("app").className = ""; // 移除加载中状态
+        document.getElementById("app").innerHTML = `
+          <div class="gallery">
+            <div class="main-stage">
+              <img id="mainView" src="${imageList[0] || 'https://via.placeholder.com/400'}" alt="商品图">
+            </div>
+            <div class="thumb-nav">
+              ${imageList.map((url, index) => `
+                <img class="thumb ${index === 0 ? 'active' : ''}" 
+                     src="${url}" 
+                     onclick="changeImg(this, '${url}')">
+              `).join('')}
+            </div>
           </div>
-          <div class="thumb-nav">
-            ${imgs.map((url, i) => `
-              <img class="thumb ${i===0?'active':''}" src="${url}" onclick="show(this, '${url}')">
-            `).join('')}
+          
+          <div class="info">
+            <div class="price">${product.currency} ${product.price}</div>
+            <h1 class="title">${product.name}</h1>
+            <div class="desc">${product.description || "暂无详情介绍"}</div>
           </div>
-        </div>
-        <div class="info">
-          <div class="price">${p.currency}${p.price}</div>
-          <h1 class="title">${p.name}</h1>
-          <div class="desc">${p.description || "暂无描述"}</div>
-        </div>
-      `;
-    });
-
-  function show(el, url) {
-    document.getElementById("view").src = url;
-    document.querySelectorAll(".thumb").forEach(t => t.classList.remove("active"));
-    el.classList.add("active");
+        `;
+      })
+      .catch(err => {
+        document.getElementById("app").innerHTML = "加载失败，请刷新重试";
+        console.error(err);
+      });
   }
 
+  // 缩略图点击切换功能
+  function changeImg(element, imageUrl) {
+    document.getElementById("mainView").src = imageUrl;
+    // 取消所有缩略图的高亮
+    document.querySelectorAll(".thumb").forEach(t => t.classList.remove("active"));
+    // 给当前点击的加上高亮
+    element.classList.add("active");
+  }
+
+  // 返回顶部按钮显示逻辑
   window.onscroll = () => {
-    document.getElementById("toTop").style.display = window.scrollY > 300 ? "flex" : "none";
+    const btn = document.getElementById("toTop");
+    btn.style.display = window.scrollY > 400 ? "flex" : "none";
   };
 </script>
 
