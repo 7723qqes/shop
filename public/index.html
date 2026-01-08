@@ -8,60 +8,87 @@
         :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --sub: #64748b; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
         
-        .header { background: #fff; padding: 20px 15px 5px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.05); }
-        .header h1 { font-size: 1.4rem; margin: 0 0 15px 0; text-align: center; font-weight: 800; }
+        /* C: 毛玻璃顶部导航 */
+        .header { 
+            background: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            padding: 20px 15px 5px; 
+            position: sticky; top: 0; z-index: 100; 
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .header h1 { font-size: 1.4rem; margin: 0 0 15px 0; text-align: center; font-weight: 800; letter-spacing: -0.5px; }
         
         .search-box { max-width: 600px; margin: 0 auto 10px; }
-        .search-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; outline: none; background: #f1f5f9; box-sizing: border-box; }
+        .search-input { 
+            width: 100%; padding: 12px 16px; border: 1px solid rgba(0,0,0,0.1); 
+            border-radius: 12px; font-size: 16px; outline: none; 
+            background: rgba(255,255,255,0.5); transition: 0.3s;
+        }
+        .search-input:focus { background: #fff; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); border-color: var(--primary); }
 
-        .categories { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; justify-content: flex-start; }
+        .categories { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
         @media (min-width: 600px) { .categories { justify-content: center; } }
-        .categories::-webkit-scrollbar { display: none; }
-        .cat-btn { padding: 8px 16px; border-radius: 20px; border: none; background: #e2e8f0; color: var(--sub); cursor: pointer; white-space: nowrap; font-weight: 700; font-size: 14px; }
-        .cat-btn.active { background: var(--primary); color: #fff; }
+        .cat-btn { 
+            padding: 8px 18px; border-radius: 20px; border: none; background: #e2e8f0; 
+            color: var(--sub); cursor: pointer; white-space: nowrap; font-weight: 700; font-size: 14px; transition: 0.2s; 
+        }
+        .cat-btn.active { background: var(--primary); color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; max-width: 1200px; margin: 0 auto; }
-        .card { background: #fff; border-radius: 12px; text-decoration: none; color: inherit; overflow: hidden; border: 1px solid #f1f5f9; display: flex; flex-direction: column; transition: transform 0.2s; }
-        .card:active { transform: scale(0.98); }
+        /* A: 骨架屏动画 */
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton { 
+            background: linear-gradient(90deg, #eff1f3 25%, #e2e8f0 50%, #eff1f3 75%); 
+            background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; 
+        }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; padding: 15px; max-width: 1200px; margin: 0 auto; }
         
+        /* C: 卡片进场动效 */
+        .card { 
+            background: #fff; border-radius: 16px; text-decoration: none; color: inherit; 
+            overflow: hidden; border: 1px solid rgba(0,0,0,0.03); display: flex; flex-direction: column; 
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeIn 0.5s ease backwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.05); }
+
         .img-box { width: 100%; aspect-ratio: 1/1; background: #f1f5f9; overflow: hidden; }
-        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+        .card:hover .img-box img { scale: 1.05; }
         
         .info { padding: 12px; }
-        .price-row { display: flex; align-items: baseline; gap: 2px; margin-bottom: 4px; }
-        .price { font-size: 1.3rem; font-weight: 800; color: #e11d48; }
-        .unit { font-size: 0.85rem; color: var(--sub); font-weight: 600; }
-        
-        .title { font-size: 0.95rem; font-weight: 600; height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4; margin-bottom: 10px; }
-        
-        .meta { font-size: 0.85rem; display: flex; justify-content: space-between; font-weight: 700; border-top: 1px solid #f1f5f9; padding-top: 8px; }
-        .meta-cat { color: var(--primary); }
-        .meta-stock { color: #10b981; }
+        .price { font-size: 1.3rem; font-weight: 800; color: #e11d48; margin-bottom: 4px; display: block; }
+        .title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; height: 2.8em; overflow: hidden; margin-bottom: 8px; }
+        .meta { font-size: 0.85rem; display: flex; justify-content: space-between; font-weight: 700; color: var(--sub); }
 
-        /* 主页右侧悬浮按钮组 */
         .fab-group { position: fixed; right: 20px; bottom: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 200; }
-        .fab { width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 1px solid #e2e8f0; 
-               box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; 
-               cursor: pointer; font-size: 16px; color: var(--sub); transition: 0.2s; }
-        .fab:active { transform: scale(0.9); background: #f8fafc; }
+        .fab { width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 1px solid rgba(0,0,0,0.05); 
+               box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+        @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 10px; } }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>物品清单</h1>
+        <h1>我的物品库</h1>
         <div class="search-box">
-            <input type="text" id="searchInput" class="search-input" placeholder="输入名称搜索..." oninput="updateUI()">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索物品..." oninput="updateUI()">
         </div>
         <div id="categories" class="categories"></div>
     </div>
 
-    <div id="products" class="grid"></div>
+    <div id="products" class="grid">
+        <div class="card"><div class="img-box skeleton"></div><div class="info"><div class="skeleton" style="height:20px;width:60%;margin-bottom:10px"></div><div class="skeleton" style="height:15px"></div></div></div>
+        <div class="card"><div class="img-box skeleton"></div><div class="info"><div class="skeleton" style="height:20px;width:60%;margin-bottom:10px"></div><div class="skeleton" style="height:15px"></div></div></div>
+        <div class="card"><div class="img-box skeleton"></div><div class="info"><div class="skeleton" style="height:20px;width:60%;margin-bottom:10px"></div><div class="skeleton" style="height:15px"></div></div></div>
+        <div class="card"><div class="img-box skeleton"></div><div class="info"><div class="skeleton" style="height:20px;width:60%;margin-bottom:10px"></div><div class="skeleton" style="height:15px"></div></div></div>
+    </div>
 
     <div class="fab-group">
-        <div class="fab" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="回到顶部">▲</div>
-        <div class="fab" onclick="window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})" title="去到底部">▼</div>
+        <div class="fab" onclick="window.scrollTo({top:0, behavior:'smooth'})">▲</div>
+        <div class="fab" onclick="window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})">▼</div>
     </div>
 
     <script>
@@ -69,15 +96,12 @@
         let currentCat = '全部';
 
         async function init() {
-            const res = await fetch(`/api/products?t=${Date.now()}`);
-            rawData = await res.json();
-            renderCats();
-            updateUI();
-            const pos = sessionStorage.getItem('listScroll');
-            if (pos) {
-                setTimeout(() => window.scrollTo(0, parseInt(pos)), 50);
-                sessionStorage.removeItem('listScroll');
-            }
+            try {
+                const res = await fetch(`/api/products?t=${Date.now()}`);
+                rawData = await res.json();
+                renderCats();
+                updateUI();
+            } catch (e) { console.error("加载失败", e); }
         }
 
         function renderCats() {
@@ -97,15 +121,15 @@
             const kw = document.getElementById('searchInput').value.toLowerCase();
             let filtered = rawData.filter(p => p.name.toLowerCase().includes(kw) && (currentCat === '全部' || (p.category || '未分类') === currentCat));
             
-            document.getElementById('products').innerHTML = filtered.map(p => {
+            document.getElementById('products').innerHTML = filtered.map((p, index) => {
                 const unit = p.currency && p.currency.includes('/') ? p.currency : '';
                 return `
-                <a href="product.html?id=${p.id}" class="card" onclick="sessionStorage.setItem('listScroll', window.scrollY)">
+                <a href="product.html?id=${p.id}" class="card" style="animation-delay: ${index * 0.05}s">
                     <div class="img-box"><img src="${(p.image_url||"").split(',')[0]}" loading="lazy"></div>
                     <div class="info">
-                        <div class="price-row"><span class="price">¥${p.price}</span><span class="unit">${unit}</span></div>
+                        <span class="price">¥${p.price}<small style="font-size:0.7em;color:#999;margin-left:2px">${unit}</small></span>
                         <div class="title">${p.name}</div>
-                        <div class="meta"><span class="meta-cat">${p.category||'未分类'}</span><span class="meta-stock">存:${p.stock}</span></div>
+                        <div class="meta"><span style="color:var(--primary)">${p.category||'未分类'}</span><span>存:${p.stock}</span></div>
                     </div>
                 </a>
             `}).join('');
