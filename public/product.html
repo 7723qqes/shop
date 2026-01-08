@@ -54,47 +54,43 @@
 </div>
 
 <script>
-  // 1. 获取网址里的商品 ID
   const urlParams = new URLSearchParams(location.search);
   const id = urlParams.get("id");
 
   if (!id) {
     document.getElementById("app").innerHTML = "未找到商品 ID";
   } else {
-    // 2. 请求接口获取数据
     fetch(`/api/products?id=${id}`)
       .then(res => res.json())
       .then(data => {
         const product = data[0];
         if (!product) {
-          document.getElementById("app").innerHTML = "该商品不存在或已下架";
+          document.getElementById("app").innerHTML = "该商品不存在";
           return;
         }
 
-        // --- 核心逻辑：处理图片地址 ---
+        // --- 核心逻辑：直接从 image_url 列提取图片 ---
         let imageList = [];
-        if (product.images && product.images.trim() !== "") {
-          // 如果 images 字段有内容，用逗号切开
-          imageList = product.images.split(',').map(item => item.trim());
-        } else if (product.image_url) {
-          // 如果没有多图，就用原本的单张主图
-          imageList = [product.image_url];
+        if (product.image_url) {
+          // 无论是一张还是多张（逗号隔开），都按逗号切分
+          imageList = product.image_url.split(',').map(item => item.trim());
         }
 
-        // 3. 渲染页面内容
-        document.getElementById("app").className = ""; // 移除加载中状态
+        document.getElementById("app").className = ""; 
         document.getElementById("app").innerHTML = `
           <div class="gallery">
             <div class="main-stage">
               <img id="mainView" src="${imageList[0] || 'https://via.placeholder.com/400'}" alt="商品图">
             </div>
-            <div class="thumb-nav">
-              ${imageList.map((url, index) => `
-                <img class="thumb ${index === 0 ? 'active' : ''}" 
-                     src="${url}" 
-                     onclick="changeImg(this, '${url}')">
-              `).join('')}
-            </div>
+            ${imageList.length > 1 ? `
+              <div class="thumb-nav">
+                ${imageList.map((url, index) => `
+                  <img class="thumb ${index === 0 ? 'active' : ''}" 
+                       src="${url}" 
+                       onclick="changeImg(this, '${url}')">
+                `).join('')}
+              </div>
+            ` : ''}
           </div>
           
           <div class="info">
@@ -105,24 +101,18 @@
         `;
       })
       .catch(err => {
-        document.getElementById("app").innerHTML = "加载失败，请刷新重试";
-        console.error(err);
+        document.getElementById("app").innerHTML = "加载失败";
       });
   }
 
-  // 缩略图点击切换功能
   function changeImg(element, imageUrl) {
     document.getElementById("mainView").src = imageUrl;
-    // 取消所有缩略图的高亮
     document.querySelectorAll(".thumb").forEach(t => t.classList.remove("active"));
-    // 给当前点击的加上高亮
     element.classList.add("active");
   }
 
-  // 返回顶部按钮显示逻辑
   window.onscroll = () => {
-    const btn = document.getElementById("toTop");
-    btn.style.display = window.scrollY > 400 ? "flex" : "none";
+    document.getElementById("toTop").style.display = window.scrollY > 400 ? "flex" : "none";
   };
 </script>
 
