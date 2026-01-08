@@ -1,282 +1,116 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>物品清单</title>
-  <style>
-    :root {
-      --primary: #2563eb;
-      --bg: #f3f4f6;
-      --card: #ffffff;
-      --text: #1f2937;
-      --sub: #6b7280;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物品清单</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --sub: #64748b; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        
+        .header { background: #fff; padding: 20px 15px 5px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 10px rgba(0,0,0,0.05); }
+        .header h1 { font-size: 1.4rem; margin: 0 0 15px 0; text-align: center; font-weight: 800; }
+        
+        .search-box { max-width: 600px; margin: 0 auto 10px; }
+        .search-input { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 16px; outline: none; background: #f1f5f9; box-sizing: border-box; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 0;
-    }
+        .categories { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; justify-content: flex-start; }
+        @media (min-width: 600px) { .categories { justify-content: center; } }
+        .categories::-webkit-scrollbar { display: none; }
+        .cat-btn { padding: 8px 16px; border-radius: 20px; border: none; background: #e2e8f0; color: var(--sub); cursor: pointer; white-space: nowrap; font-weight: 700; font-size: 14px; }
+        .cat-btn.active { background: var(--primary); color: #fff; }
 
-    /* 顶部固定栏：优化层级和阴影 */
-    .header {
-      background: #fff;
-      padding: 20px 15px 10px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 1px 10px rgba(0,0,0,0.05);
-    }
-    .header h1 {
-      font-size: 1.5rem;
-      margin: 0 0 15px 0;
-      text-align: center;
-      letter-spacing: 1px;
-    }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; max-width: 1200px; margin: 0 auto; }
+        .card { background: #fff; border-radius: 12px; text-decoration: none; color: inherit; overflow: hidden; border: 1px solid #f1f5f9; display: flex; flex-direction: column; transition: transform 0.2s; }
+        .card:active { transform: scale(0.98); }
+        
+        .img-box { width: 100%; aspect-ratio: 1/1; background: #f1f5f9; overflow: hidden; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .info { padding: 12px; }
+        .price-row { display: flex; align-items: baseline; gap: 2px; margin-bottom: 4px; }
+        .price { font-size: 1.3rem; font-weight: 800; color: #e11d48; }
+        .unit { font-size: 0.85rem; color: var(--sub); font-weight: 600; }
+        
+        .title { font-size: 0.95rem; font-weight: 600; height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4; margin-bottom: 10px; }
+        
+        .meta { font-size: 0.85rem; display: flex; justify-content: space-between; font-weight: 700; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+        .meta-cat { color: var(--primary); }
+        .meta-stock { color: #10b981; }
 
-    /* 搜索与排序栏：加大点击区域 */
-    .controls-row {
-      display: flex;
-      gap: 10px;
-      max-width: 800px;
-      margin: 0 auto 15px;
-    }
-    .search-box {
-      flex: 1;
-      position: relative;
-    }
-    .search-input {
-      width: 100%;
-      padding: 14px 15px;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      font-size: 16px; /* 防止iOS缩放 */
-      box-sizing: border-box;
-      outline: none;
-      background: #f9fafb;
-    }
-    .search-input:focus {
-      border-color: var(--primary);
-      background: #fff;
-    }
-    .sort-select {
-      padding: 0 15px;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      background: #f9fafb;
-      font-size: 14px;
-      outline: none;
-      cursor: pointer;
-      min-width: 110px;
-    }
+        /* 主页右侧悬浮按钮组 */
+        .fab-group { position: fixed; right: 20px; bottom: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 200; }
+        .fab { width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 1px solid #e2e8f0; 
+               box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; 
+               cursor: pointer; font-size: 16px; color: var(--sub); transition: 0.2s; }
+        .fab:active { transform: scale(0.9); background: #f8fafc; }
 
-    /* 分类居中：药丸风格，加大间距防误触 */
-    .categories {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding: 10px 0;
-      justify-content: flex-start; /* 默认靠左，内容多时可滚动 */
-      scrollbar-width: none;
-    }
-    @media (min-width: 600px) { .categories { justify-content: center; } }
-    .categories::-webkit-scrollbar { display: none; }
-    
-    .cat-btn {
-      padding: 10px 20px;
-      border-radius: 25px;
-      border: none;
-      background: #e5e7eb;
-      color: var(--sub);
-      cursor: pointer;
-      white-space: nowrap;
-      font-weight: 600;
-      font-size: 14px;
-      transition: 0.2s;
-    }
-    .cat-btn.active {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    }
-
-    /* 铺满页面的网格布局 */
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: 15px;
-      padding: 15px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    /* 商品卡片：图片防抖处理 */
-    .product-card {
-      background: var(--card);
-      border-radius: 16px;
-      text-decoration: none;
-      color: inherit;
-      overflow: hidden;
-      border: 1px solid rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.2s;
-    }
-    .product-card:active { transform: scale(0.98); }
-
-    .img-box {
-      width: 100%;
-      aspect-ratio: 1/1;
-      background: #e5e7eb; /* 占位背景色：防抖 */
-      position: relative;
-    }
-    .img-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    
-    .info {
-      padding: 12px;
-      flex-grow: 1;
-    }
-    .price {
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: #dc2626;
-      margin-bottom: 4px;
-    }
-    .title {
-      font-size: 0.95rem;
-      font-weight: 500;
-      margin-bottom: 8px;
-      line-height: 1.4;
-      height: 2.8em;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-    }
-    .meta {
-      font-size: 0.75rem;
-      color: var(--sub);
-      display: flex;
-      justify-content: space-between;
-      border-top: 1px solid #f9fafb;
-      padding-top: 8px;
-    }
-
-    @media (max-width: 480px) {
-      .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        padding: 10px;
-      }
-    }
-  </style>
+        @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+    </style>
 </head>
 <body>
-
-<div class="header">
-  <h1>物品清单</h1>
-  <div class="controls-row">
-    <div class="search-box">
-      <input type="text" id="searchInput" class="search-input" placeholder="搜索物品名称..." oninput="updateDisplay()">
+    <div class="header">
+        <h1>物品清单</h1>
+        <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="输入名称搜索..." oninput="updateUI()">
+        </div>
+        <div id="categories" class="categories"></div>
     </div>
-    <select id="sortOrder" class="sort-select" onchange="updateDisplay()">
-      <option value="new">最新添加</option>
-      <option value="priceAsc">价格: 低到高</option>
-      <option value="priceDesc">价格: 高到低</option>
-      <option value="stock">库存充足优先</option>
-    </select>
-  </div>
-  <div id="categories" class="categories"></div>
-</div>
 
-<div id="products" class="products-grid"></div>
+    <div id="products" class="grid"></div>
 
-<script>
-let allData = [];
-let currentCat = '全部';
+    <div class="fab-group">
+        <div class="fab" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="回到顶部">▲</div>
+        <div class="fab" onclick="window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})" title="去到底部">▼</div>
+    </div>
 
-function loadData() {
-  fetch(`/api/products?t=${Date.now()}`)
-    .then(res => res.json())
-    .then(data => {
-      allData = data;
-      renderCats();
-      updateDisplay();
-    });
-}
+    <script>
+        let rawData = [];
+        let currentCat = '全部';
 
-function renderCats() {
-  const container = document.getElementById('categories');
-  const catMap = allData.reduce((acc, p) => {
-    const c = p.category || '未分类';
-    acc[c] = (acc[c] || 0) + 1;
-    return acc;
-  }, {});
-  
-  const cats = ['全部', ...Object.keys(catMap)];
-  container.innerHTML = cats.map(c => {
-    const count = c === '全部' ? allData.length : catMap[c];
-    return `<button class="cat-btn ${c === currentCat ? 'active' : ''}" onclick="filterCat('${c}')">${c} (${count})</button>`;
-  }).join('');
-}
+        async function init() {
+            const res = await fetch(`/api/products?t=${Date.now()}`);
+            rawData = await res.json();
+            renderCats();
+            updateUI();
+            const pos = sessionStorage.getItem('listScroll');
+            if (pos) {
+                setTimeout(() => window.scrollTo(0, parseInt(pos)), 50);
+                sessionStorage.removeItem('listScroll');
+            }
+        }
 
-function filterCat(cat) {
-  currentCat = cat;
-  renderCats();
-  updateDisplay();
-}
+        function renderCats() {
+            const counts = rawData.reduce((acc, p) => {
+                const c = p.category || '未分类';
+                acc[c] = (acc[c] || 0) + 1;
+                return acc;
+            }, {});
+            const container = document.getElementById('categories');
+            const cats = ['全部', ...Object.keys(counts)];
+            container.innerHTML = cats.map(c => `<button class="cat-btn ${c===currentCat?'active':''}" onclick="setCat('${c}')">${c} (${c==='全部'?rawData.length:counts[c]})</button>`).join('');
+        }
 
-function updateDisplay() {
-  const keyword = document.getElementById('searchInput').value.toLowerCase();
-  const sort = document.getElementById('sortOrder').value;
-  
-  let filtered = allData.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(keyword);
-    const matchesCat = currentCat === '全部' || (p.category || '未分类') === currentCat;
-    return matchesSearch && matchesCat;
-  });
+        function setCat(c) { currentCat = c; renderCats(); updateUI(); }
 
-  // 排序
-  if (sort === 'priceAsc') filtered.sort((a,b) => a.price - b.price);
-  if (sort === 'priceDesc') filtered.sort((a,b) => b.price - a.price);
-  if (sort === 'stock') filtered.sort((a,b) => b.stock - a.stock);
-  if (sort === 'new') filtered.sort((a,b) => b.id - a.id);
-
-  const container = document.getElementById('products');
-  if (filtered.length === 0) {
-    container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#999;">无匹配物品</div>';
-    return;
-  }
-
-  container.innerHTML = filtered.map(p => {
-    const imgUrl = (p.image_url || "").split(',')[0].trim();
-    return `
-      <a href="product.html?id=${p.id}" class="product-card">
-        <div class="img-box">
-          <img src="${imgUrl}" loading="lazy" onerror="this.style.opacity='0'">
-        </div>
-        <div class="info">
-          <div class="price">${p.currency || '¥'}${p.price}</div>
-          <div class="title">${p.name}</div>
-          <div class="meta">
-            <span>${p.category || '未分类'}</span>
-            <span>库存: ${p.stock}</span>
-          </div>
-        </div>
-      </a>
-    `;
-  }).join('');
-}
-
-loadData();
-</script>
+        function updateUI() {
+            const kw = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = rawData.filter(p => p.name.toLowerCase().includes(kw) && (currentCat === '全部' || (p.category || '未分类') === currentCat));
+            
+            document.getElementById('products').innerHTML = filtered.map(p => {
+                const unit = p.currency && p.currency.includes('/') ? p.currency : '';
+                return `
+                <a href="product.html?id=${p.id}" class="card" onclick="sessionStorage.setItem('listScroll', window.scrollY)">
+                    <div class="img-box"><img src="${(p.image_url||"").split(',')[0]}" loading="lazy"></div>
+                    <div class="info">
+                        <div class="price-row"><span class="price">¥${p.price}</span><span class="unit">${unit}</span></div>
+                        <div class="title">${p.name}</div>
+                        <div class="meta"><span class="meta-cat">${p.category||'未分类'}</span><span class="meta-stock">存:${p.stock}</span></div>
+                    </div>
+                </a>
+            `}).join('');
+        }
+        init();
+    </script>
 </body>
 </html>
