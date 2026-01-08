@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>商品详情</title>
   <style>
-    :root { --text-main: #111827; --border: #e5e7eb; }
+    :root { --text-main: #111827; --text-sub: #6b7280; --border: #e5e7eb; --red: #e11d48; --green: #16a34a; }
     body { font-family: -apple-system, system-ui, sans-serif; margin: 0; background: #fff; color: var(--text-main); }
     
     /* 图片展示区 */
@@ -13,17 +13,20 @@
     .main-stage { width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; background: #fff; }
     .main-stage img { width: 100%; height: 100%; object-fit: contain; }
     
-    /* 缩略图栏 */
     .thumb-nav { display: flex; gap: 10px; padding: 15px; overflow-x: auto; background: #fff; }
-    .thumb { 
-      width: 65px; height: 65px; border-radius: 8px; cursor: pointer; 
-      object-fit: cover; border: 2px solid transparent; flex-shrink: 0; transition: 0.2s;
-    }
-    .thumb.active { border-color: #000; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .thumb { width: 65px; height: 65px; border-radius: 8px; cursor: pointer; object-fit: cover; border: 2px solid transparent; flex-shrink: 0; }
+    .thumb.active { border-color: #000; }
 
+    /* 信息区 */
     .info { max-width: 600px; margin: 0 auto; padding: 25px 20px; }
-    .price { font-size: 1.8rem; font-weight: 800; color: #e11d48; margin-bottom: 5px; }
-    .title { font-size: 1.4rem; margin: 0 0 20px 0; line-height: 1.4; font-weight: 700; }
+    .price { font-size: 1.8rem; font-weight: 800; color: var(--red); margin-bottom: 5px; }
+    .title { font-size: 1.4rem; margin: 0 0 10px 0; line-height: 1.4; font-weight: 700; }
+    
+    /* 库存样式 */
+    .stock-tag { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; margin-bottom: 20px; }
+    .in-stock { background: #dcfce7; color: var(--green); }
+    .out-stock { background: #fee2e2; color: var(--red); }
+
     .desc { font-size: 1rem; color: #4b5563; white-space: pre-wrap; line-height: 1.8; border-top: 1px solid var(--border); padding-top: 20px; }
 
     .fab-group { position: fixed; right: 20px; bottom: 30px; display: flex; flex-direction: column; gap: 15px; }
@@ -36,7 +39,7 @@
 </head>
 <body>
 
-<div id="app" class="loading">读取商品数据中...</div>
+<div id="app" class="loading">加载中...</div>
 
 <div class="fab-group">
   <a href="index.html" class="fab">🏠</a>
@@ -50,7 +53,8 @@
   if (!id) {
     document.getElementById("app").innerHTML = "❌ 缺少商品ID";
   } else {
-    fetch(`/api/products?id=${id}`)
+    // 加上 t=时间戳 强制跳过浏览器缓存，看到最新数据
+    fetch(`/api/products?id=${id}&t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
         const p = data[0];
@@ -59,25 +63,23 @@
           return;
         }
 
-        // --- 增强版图片解析逻辑 ---
-        let rawUrl = p.image_url || "";
-        // 1. 去掉可能存在的换行符 2. 按逗号拆分 3. 过滤掉空字符串 4. 去掉前后空格
-        let imageList = rawUrl.replace(/\n/g, '').split(',').map(u => u.trim()).filter(u => u.length > 0);
+        // 解析多图
+        let imageList = (p.image_url || "").replace(/\n/g, '').split(',').map(u => u.trim()).filter(u => u.length > 0);
 
-        console.log("解析到的图片列表:", imageList); // 开发者调试用
+        // 处理库存状态
+        const isOutOfStock = p.stock <= 0;
+        const stockHTML = isOutOfStock 
+          ? `<span class="stock-tag out-stock">❌ 已售罄</span>`
+          : `<span class="stock-tag in-stock">✅ 库存充足 (${p.stock})</span>`;
 
         document.getElementById("app").className = ""; 
         document.getElementById("app").innerHTML = `
           <div class="gallery">
-            <div class="main-stage">
-              <img id="mainView" src="${imageList[0] || ''}" onerror="this.src='https://via.placeholder.com/400?text=图片加载失败'">
-            </div>
+            <div class="main-stage"><img id="mainView" src="${imageList[0] || ''}"></div>
             ${imageList.length > 1 ? `
               <div class="thumb-nav">
                 ${imageList.map((url, index) => `
-                  <img class="thumb ${index === 0 ? 'active' : ''}" 
-                       src="${url}" 
-                       onclick="changeImg(this, '${url.replace(/'/g, "\\'")}')">
+                  <img class="thumb ${index === 0 ? 'active' : ''}" src="${url}" onclick="changeImg(this, '${url.replace(/'/g, "\\'")}')">
                 `).join('')}
               </div>
             ` : ''}
@@ -86,14 +88,12 @@
           <div class="info">
             <div class="price">${p.currency || '¥'} ${p.price}</div>
             <h1 class="title">${p.name}</h1>
+            ${stockHTML}
             <div class="desc">${p.description || "暂无详情介绍"}</div>
           </div>
         `;
       })
-      .catch(err => {
-        document.getElementById("app").innerHTML = "❌ 网络连接失败";
-        console.error(err);
-      });
+      .catch(err => { document.getElementById("app").innerHTML = "❌ 加载失败"; });
   }
 
   function changeImg(element, imageUrl) {

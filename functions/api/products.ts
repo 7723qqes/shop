@@ -1,28 +1,25 @@
 export async function onRequest(context: { request: Request; env: any }) {
   const { request, env } = context;
 
-  // 1. 从环境变量获取（请在 Pages 后台 Settings 绑定）
+  // 从环境变量获取配置（确保你在 Cloudflare Pages 后台设置了这两个变量）
   const SUPABASE_URL = env.SUPABASE_URL;
   const SUPABASE_KEY = env.SUPABASE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return new Response(JSON.stringify({ error: "Missing Environment Variables" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "服务器配置缺失" }), { status: 500 });
   }
 
   const url = new URL(request.url);
-  const category = url.searchParams.get("category");
   const id = url.searchParams.get("id");
+  const category = url.searchParams.get("category");
 
-  // 2. 基础查询条件
-  // 加上 order=id.asc 保证列表排序稳定
+  // 基础查询：只查上架商品，包含所有必要字段
   let query = "is_active=eq.true&select=id,name,price,currency,stock,image_url,description,category&order=id.asc";
 
-  // 3. 动态过滤逻辑
+  // 如果传了 ID，改为单商品查询
   if (id) {
-    // 如果有 ID，说明是详情页请求
     query = `id=eq.${id}&select=id,name,price,currency,stock,image_url,description,category`;
   } else if (category && category !== '全部') {
-    // 如果有分类，说明是分类筛选
     query += `&category=eq.${encodeURIComponent(category)}`;
   }
 
@@ -37,18 +34,14 @@ export async function onRequest(context: { request: Request; env: any }) {
 
     const data = await res.json();
 
-    // 4. 优化缓存策略
-    // 列表页缓存 60秒，单商品详情页缓存 1小时（因为详情变动通常较慢）
-    const cacheTime = id ? "3600" : "60";
-
     return new Response(JSON.stringify(data), {
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": `public, max-age=${cacheTime}`,
-        "Access-Control-Allow-Origin": "*" // 如果需要跨域
+        "Cache-Control": "public, max-age=1", // 这里改为 1 秒，解决更新慢的问题
+        "Access-Control-Allow-Origin": "*"
       }
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Database Connection Error" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "数据库连接失败" }), { status: 500 });
   }
 }
