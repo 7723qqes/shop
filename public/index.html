@@ -2,156 +2,247 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>商品列表</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>精品展厅</title>
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont;
-      margin: 20px;
+    :root {
+      --primary: #000;
+      --bg: #ffffff;
+      --accent: #f4f4f5;
+      --text-main: #18181b;
+      --text-sub: #71717a;
+      --card-bg: #ffffff;
+      --price-red: #000; /* 这里改为黑色，更符合高级画册感 */
     }
 
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 顶部页眉 */
+    .header {
+      padding: 40px 20px 20px;
+      text-align: center;
+      background: #fff;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    /* 分类导航 - 药丸风格 */
     .categories {
       display: flex;
       gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+      padding: 10px 20px 30px;
+      overflow-x: auto;
+      justify-content: center;
+      scrollbar-width: none;
     }
-
-    .category-btn {
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid #ddd;
-      cursor: pointer;
+    .categories::-webkit-scrollbar { display: none; }
+    
+    .cat-btn {
+      padding: 8px 20px;
+      border-radius: 100px;
+      border: 1px solid #e4e4e7;
       background: #fff;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      color: var(--text-sub);
     }
-
-    .category-btn.active {
-      background: #000;
+    .cat-btn.active {
+      background: var(--primary);
       color: #fff;
-      border-color: #000;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
-    .products {
+    /* 商品网格布局 */
+    .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 24px;
+      padding: 0 20px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    .product {
-      border: 1px solid #eee;
-      padding: 12px;
-      border-radius: 8px;
+    /* 商品卡片美化 */
+    .product-card {
+      text-decoration: none;
+      color: inherit;
+      background: var(--card-bg);
+      transition: all 0.4s ease;
       display: flex;
       flex-direction: column;
     }
 
-    .product img {
+    .img-container {
       width: 100%;
-      height: 140px;
+      aspect-ratio: 3/4; /* 稍微纵向，更有画册感 */
+      background: var(--accent);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .img-container img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      border-radius: 6px;
+      transition: transform 0.6s ease;
+    }
+    .product-card:hover .img-container img {
+      transform: scale(1.08);
     }
 
-    .price {
-      font-weight: bold;
-      margin-top: 6px;
-      color: #e11d48;
+    .info-container {
+      padding: 4px;
     }
-
-    /* 新增库存样式 */
-    .stock {
-      font-size: 0.85em;
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin: 0 0 6px 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 1; /* 标题保持一行，更整洁 */
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      letter-spacing: -0.2px;
+    }
+    .card-price {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--price-red);
+      letter-spacing: -0.5px;
+    }
+    .card-meta {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-sub);
       margin-top: 4px;
+      display: flex;
+      justify-content: space-between;
     }
-    .stock-in { color: #16a34a; } /* 有货绿色 */
-    .stock-out { color: #dc2626; font-weight: bold; } /* 没货红色 */
-    
-    .view-detail {
-      margin-top: 10px;
-      text-align: center;
-      background: #f4f4f5;
-      padding: 6px;
-      border-radius: 4px;
-      text-decoration: none;
-      color: #333;
-      font-size: 0.9em;
+    .stock-label.out { color: #ef4444; }
+
+    /* 骨架屏动画 */
+    .skeleton {
+      background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 50%, #f4f4f5 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 12px;
+    }
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    @media (max-width: 480px) {
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        padding: 0 16px;
+      }
+      .header h1 { font-size: 1.5rem; }
     }
   </style>
 </head>
 <body>
 
-<h1>🛒 商品列表</h1>
+<div class="header">
+  <h1>Selection</h1>
+</div>
 
-<div id="categories" class="categories"></div>
-<div id="products" class="products"></div>
+<div id="categories" class="categories">
+  <div class="skeleton" style="width:60px; height:34px; border-radius:100px;"></div>
+  <div class="skeleton" style="width:60px; height:34px; border-radius:100px;"></div>
+</div>
+
+<div id="products" class="products-grid">
+  <div class="product-card">
+    <div class="img-container skeleton"></div>
+    <div class="skeleton" style="height:20px; width:80%; margin-bottom:8px;"></div>
+    <div class="skeleton" style="height:20px; width:40%;"></div>
+  </div>
+  <div class="product-card">
+    <div class="img-container skeleton"></div>
+    <div class="skeleton" style="height:20px; width:80%; margin-bottom:8px;"></div>
+    <div class="skeleton" style="height:20px; width:40%;"></div>
+  </div>
+</div>
 
 <script>
-let allProducts = []
-let currentCategory = '全部'
+let allProducts = [];
+let currentCat = '全部';
 
-fetch('/api/products')
-  .then(res => res.json())
-  .then(data => {
-    allProducts = data
-    renderCategories()
-    renderProducts()
-  })
-
-function renderCategories() {
-  const container = document.getElementById('categories')
-  container.innerHTML = ''
-
-  const categories = ['全部', ...new Set(
-    allProducts
-      .map(p => p.category)
-      .filter(Boolean)
-  )]
-
-  categories.forEach(cat => {
-    const btn = document.createElement('button')
-    btn.className = 'category-btn' + (cat === currentCategory ? ' active' : '')
-    btn.textContent = cat
-    btn.onclick = () => {
-      currentCategory = cat
-      renderCategories()
-      renderProducts()
-    }
-    container.appendChild(btn)
-  })
+function loadData() {
+  fetch(`/api/products?t=${Date.now()}`)
+    .then(res => res.json())
+    .then(data => {
+      allProducts = data;
+      renderCats();
+      renderList();
+    });
 }
 
-function renderProducts() {
-  const container = document.getElementById('products')
-  container.innerHTML = ''
+function renderCats() {
+  const container = document.getElementById('categories');
+  const cats = ['全部', ...new Set(allProducts.map(p => p.category).filter(Boolean))];
+  container.innerHTML = cats.map(c => `
+    <button class="cat-btn ${c === currentCat ? 'active' : ''}" onclick="filter('${c}')">${c}</button>
+  `).join('');
+}
 
-  const filtered = currentCategory === '全部'
-    ? allProducts
-    : allProducts.filter(p => p.category === currentCategory)
+function filter(cat) {
+  currentCat = cat;
+  renderCats();
+  renderList();
+}
 
+function renderList() {
+  const container = document.getElementById('products');
+  const filtered = currentCat === '全部' ? allProducts : allProducts.filter(p => p.category === currentCat);
+  
   if (filtered.length === 0) {
-    container.innerHTML = '<p>该分类暂无商品</p>'
-    return
+    container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 100px; color: #999;">Coming Soon</div>';
+    return;
   }
 
-  filtered.forEach(p => {
-    const div = document.createElement('div')
-    div.className = 'product'
-    
-    // 判断库存状态
-    const stockHTML = p.stock > 0 
-      ? `<div class="stock stock-in">库存: ${p.stock}</div>` 
-      : `<div class="stock stock-out">已售罄</div>`;
+  container.innerHTML = filtered.map(p => {
+    const imgArray = (p.image_url || "").replace(/\s+/g, '').split(',').filter(Boolean);
+    const mainImg = imgArray[0] || '';
+    const isOut = p.stock <= 0;
 
-    div.innerHTML = `
-      <img src="${p.image_url || 'https://via.placeholder.com/200'}" />
-      <h3 style="margin: 8px 0 4px 0; font-size: 1.1em;">${p.name}</h3>
-      <div class="price">${p.currency} ${p.price}</div>
-      ${stockHTML}
-      <a class="view-detail" href="product.html?id=${p.id}">查看详情</a>
-    `
-    container.appendChild(div)
-  })
+    return `
+      <a href="product.html?id=${p.id}" class="product-card">
+        <div class="img-container">
+          <img src="${mainImg}" onerror="this.src='https://via.placeholder.com/400?text=Wait'" loading="lazy">
+        </div>
+        <div class="info-container">
+          <h3 class="card-title">${p.name || 'Untitled'}</h3>
+          <div class="card-price">${p.currency || '$'}${p.price}</div>
+          <div class="card-meta">
+            <span>${p.category}</span>
+            <span class="stock-label ${isOut ? 'out' : ''}">${isOut ? 'Sold Out' : 'Stock: ' + p.stock}</span>
+          </div>
+        </div>
+      </a>
+    `;
+  }).join('');
 }
-</script>
 
+loadData();
+</script>
 </body>
 </html>
