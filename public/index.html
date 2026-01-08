@@ -3,187 +3,170 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>精品展厅</title>
+  <title>物品清单</title>
   <style>
     :root {
-      --primary: #000;
-      --bg: #ffffff;
-      --accent: #f4f4f5;
-      --text-main: #18181b;
-      --text-sub: #71717a;
-      --card-bg: #ffffff;
-      --price-red: #000; /* 这里改为黑色，更符合高级画册感 */
+      --primary: #2563eb; /* 蓝色更适合百货/工具感 */
+      --bg: #f3f4f6;    /* 浅灰底色 */
+      --card: #ffffff;
+      --text: #1f2937;
+      --sub-text: #6b7280;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, system-ui, sans-serif;
       background: var(--bg);
-      color: var(--text-main);
+      color: var(--text);
       margin: 0;
       padding: 0;
-      -webkit-font-smoothing: antialiased;
     }
 
-    /* 顶部页眉 */
+    /* 顶部区域 */
     .header {
-      padding: 40px 20px 20px;
-      text-align: center;
       background: #fff;
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
     .header h1 {
-      font-size: 1.8rem;
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      margin: 0;
-      text-transform: uppercase;
+      font-size: 1.5rem;
+      margin: 0 0 15px 0;
+      text-align: center;
+      color: var(--text);
     }
 
-    /* 分类导航 - 药丸风格 */
+    /* 搜索框样式 */
+    .search-container {
+      max-width: 500px;
+      margin: 0 auto 15px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 40px 12px 15px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      outline: none;
+      background: #f9fafb;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+    .search-icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      pointer-events: none;
+    }
+
+    /* 分类导航 */
     .categories {
       display: flex;
       gap: 10px;
-      padding: 10px 20px 30px;
       overflow-x: auto;
-      justify-content: center;
+      padding: 5px 0;
+      justify-content: flex-start;
       scrollbar-width: none;
     }
     .categories::-webkit-scrollbar { display: none; }
-    
     .cat-btn {
-      padding: 8px 20px;
-      border-radius: 100px;
-      border: 1px solid #e4e4e7;
-      background: #fff;
-      font-size: 0.9rem;
-      font-weight: 500;
+      padding: 6px 15px;
+      border-radius: 8px;
+      border: none;
+      background: #f3f4f6;
+      color: var(--sub-text);
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
-      color: var(--text-sub);
+      font-weight: 500;
     }
     .cat-btn.active {
       background: var(--primary);
       color: #fff;
-      border-color: var(--primary);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
-    /* 商品网格布局 */
+    /* 列表布局 */
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: 24px;
-      padding: 0 20px 40px;
-      max-width: 1200px;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      padding: 15px;
+      max-width: 1000px;
       margin: 0 auto;
     }
 
-    /* 商品卡片美化 */
+    /* 卡片风格 */
     .product-card {
+      background: var(--card);
+      border-radius: 12px;
       text-decoration: none;
       color: inherit;
-      background: var(--card-bg);
-      transition: all 0.4s ease;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
+      border: 1px solid #eee;
     }
-
-    .img-container {
+    .img-box {
       width: 100%;
-      aspect-ratio: 3/4; /* 稍微纵向，更有画册感 */
-      background: var(--accent);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 12px;
+      aspect-ratio: 1/1;
+      background: #f9fafb;
     }
-    .img-container img {
+    .img-box img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.6s ease;
     }
-    .product-card:hover .img-container img {
-      transform: scale(1.08);
+    .info {
+      padding: 10px;
     }
-
-    .info-container {
-      padding: 4px;
-    }
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      line-height: 1.4;
-      margin: 0 0 6px 0;
-      display: -webkit-box;
-      -webkit-line-clamp: 1; /* 标题保持一行，更整洁 */
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      letter-spacing: -0.2px;
-    }
-    .card-price {
+    .price {
       font-size: 1.1rem;
-      font-weight: 800;
-      color: var(--price-red);
-      letter-spacing: -0.5px;
+      font-weight: bold;
+      color: #dc2626;
+      margin-bottom: 4px;
     }
-    .card-meta {
+    .title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+      height: 2.4em;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .meta {
       font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-sub);
-      margin-top: 4px;
-      display: flex;
-      justify-content: space-between;
-    }
-    .stock-label.out { color: #ef4444; }
-
-    /* 骨架屏动画 */
-    .skeleton {
-      background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 50%, #f4f4f5 75%);
-      background-size: 200% 100%;
-      animation: loading 1.5s infinite;
-      border-radius: 12px;
-    }
-    @keyframes loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+      color: var(--sub-text);
     }
 
     @media (max-width: 480px) {
-      .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        padding: 0 16px;
-      }
-      .header h1 { font-size: 1.5rem; }
+      .products-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>Selection</h1>
+  <h1>物品清单</h1>
+  <div class="search-container">
+    <input type="text" id="searchInput" class="search-input" placeholder="输入名称或分类搜索..." oninput="handleSearch()">
+    <span class="search-icon">🔍</span>
+  </div>
+  <div id="categories" class="categories"></div>
 </div>
 
-<div id="categories" class="categories">
-  <div class="skeleton" style="width:60px; height:34px; border-radius:100px;"></div>
-  <div class="skeleton" style="width:60px; height:34px; border-radius:100px;"></div>
-</div>
-
-<div id="products" class="products-grid">
-  <div class="product-card">
-    <div class="img-container skeleton"></div>
-    <div class="skeleton" style="height:20px; width:80%; margin-bottom:8px;"></div>
-    <div class="skeleton" style="height:20px; width:40%;"></div>
-  </div>
-  <div class="product-card">
-    <div class="img-container skeleton"></div>
-    <div class="skeleton" style="height:20px; width:80%; margin-bottom:8px;"></div>
-    <div class="skeleton" style="height:20px; width:40%;"></div>
-  </div>
-</div>
+<div id="products" class="products-grid"></div>
 
 <script>
 let allProducts = [];
+let filteredProducts = [];
 let currentCat = '全部';
 
 function loadData() {
@@ -191,6 +174,7 @@ function loadData() {
     .then(res => res.json())
     .then(data => {
       allProducts = data;
+      filteredProducts = data;
       renderCats();
       renderList();
     });
@@ -200,42 +184,46 @@ function renderCats() {
   const container = document.getElementById('categories');
   const cats = ['全部', ...new Set(allProducts.map(p => p.category).filter(Boolean))];
   container.innerHTML = cats.map(c => `
-    <button class="cat-btn ${c === currentCat ? 'active' : ''}" onclick="filter('${c}')">${c}</button>
+    <button class="cat-btn ${c === currentCat ? 'active' : ''}" onclick="filterCat('${c}')">${c}</button>
   `).join('');
 }
 
-function filter(cat) {
+function filterCat(cat) {
   currentCat = cat;
+  handleSearch(); // 过滤时同时考虑搜索词
   renderCats();
+}
+
+function handleSearch() {
+  const keyword = document.getElementById('searchInput').value.toLowerCase();
+  
+  filteredProducts = allProducts.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(keyword) || 
+                          (p.category && p.category.toLowerCase().includes(keyword));
+    const matchesCat = currentCat === '全部' || p.category === currentCat;
+    return matchesSearch && matchesCat;
+  });
+  
   renderList();
 }
 
 function renderList() {
   const container = document.getElementById('products');
-  const filtered = currentCat === '全部' ? allProducts : allProducts.filter(p => p.category === currentCat);
-  
-  if (filtered.length === 0) {
-    container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 100px; color: #999;">Coming Soon</div>';
+  if (filteredProducts.length === 0) {
+    container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #999;">没找到相关物品</div>';
     return;
   }
 
-  container.innerHTML = filtered.map(p => {
-    const imgArray = (p.image_url || "").replace(/\s+/g, '').split(',').filter(Boolean);
+  container.innerHTML = filteredProducts.map(p => {
+    const imgArray = (p.image_url || "").split(',').map(u => u.trim()).filter(Boolean);
     const mainImg = imgArray[0] || '';
-    const isOut = p.stock <= 0;
-
     return `
       <a href="product.html?id=${p.id}" class="product-card">
-        <div class="img-container">
-          <img src="${mainImg}" onerror="this.src='https://via.placeholder.com/400?text=Wait'" loading="lazy">
-        </div>
-        <div class="info-container">
-          <h3 class="card-title">${p.name || 'Untitled'}</h3>
-          <div class="card-price">${p.currency || '$'}${p.price}</div>
-          <div class="card-meta">
-            <span>${p.category}</span>
-            <span class="stock-label ${isOut ? 'out' : ''}">${isOut ? 'Sold Out' : 'Stock: ' + p.stock}</span>
-          </div>
+        <div class="img-box"><img src="${mainImg}" loading="lazy"></div>
+        <div class="info">
+          <div class="price">${p.currency || '$'}${p.price}</div>
+          <div class="title">${p.name}</div>
+          <div class="meta">库存: ${p.stock}</div>
         </div>
       </a>
     `;
