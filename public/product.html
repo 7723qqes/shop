@@ -3,388 +3,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>物品档案详情 - 官方全量版</title>
+    <title>物品详情全量版 - 系统</title>
     <style>
         /* =========================================
-           1. 系统 UI 规范与变量 (严格排版控制)
+           1. 深度 CSS 变量系统 (Design Tokens)
            ========================================= */
         :root {
-            --primary-hex: #4f46e5;
-            --primary-soft: rgba(79, 70, 229, 0.08);
+            /* 品牌核心色值 */
+            --p-hex: #4f46e5;
+            --p-rgb: 79, 70, 229;
             --danger-hex: #ef4444;
             --success-hex: #10b981;
-            --warning-hex: #f59e0b;
-            --bg-base: #f8fafc;
-            --white: #ffffff;
             
-            /* 字体排版层级 - 解决大小不一问题 */
-            --font-price-big: 32px;
-            --font-price-sym: 18px;
-            --font-h1: 22px;
-            --font-desc: 16px;
-            --font-tag: 12px;
-            --font-label: 14px;
-            --font-unit: 16px;
+            /* 文字排版层级 - 强制锁定解决大小不一 */
+            --font-price: 36px;
+            --font-title: 24px;
+            --font-body: 16px;
+            --font-small: 13px;
+            --font-tiny: 11px;
             
-            /* 颜色层级 */
-            --color-title: #0f172a;
-            --color-body: #334155;
-            --color-sub: #64748b;
-            --color-border: #f1f5f9;
+            /* 色彩语义层级 */
+            --c-text-title: #0f172a;
+            --c-text-body: #334155;
+            --c-text-sub: #64748b;
+            --c-bg-page: #ffffff;
+            --c-bg-off: #f8fafc;
+            --c-border: #f1f5f9;
+            
+            /* 交互与动效 */
+            --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+            --shadow-float: 0 10px 30px -10px rgba(0,0,0,0.1);
         }
 
-        /* 基础样式复位 */
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
+        /* 2. 基础复位与全局排版控制 */
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-variant-numeric: tabular-nums;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--white); color: var(--color-title);
-            line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+            background-color: var(--c-bg-page); color: var(--c-text-title);
+            line-height: 1.6; overflow-x: hidden;
         }
 
-        /* =========================================
-           2. 顶部交互式导航栏
-           ========================================= */
-        .sticky-nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
-            padding: 16px; display: flex; justify-content: space-between; align-items: center;
+        /* 3. 顶部沉浸式导航栏 */
+        .top-nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            padding: 16px; display: flex; justify-content: space-between;
             pointer-events: none;
         }
 
-        .circle-btn {
-            width: 42px; height: 42px; background: rgba(255, 255, 255, 0.9);
+        .icon-btn {
+            width: 44px; height: 44px; background: rgba(255, 255, 255, 0.85);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-decoration: none;
-            color: var(--color-title); pointer-events: auto; backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.4); transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-decoration: none;
+            color: var(--c-text-title); pointer-events: auto; backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.5); transition: 0.2s var(--ease-out);
         }
-        .circle-btn:active { transform: scale(0.9); background: #f1f5f9; }
+        .icon-btn:active { transform: scale(0.9); background: #eee; }
 
-        /* =========================================
-           3. 智能轮播图引擎 (展开式逻辑)
-           ========================================= */
-        .hero-viewer {
-            width: 100%; aspect-ratio: 1 / 1; background: var(--bg-base);
+        /* 4. 智能媒体播放与轮播引擎 */
+        .media-container {
+            width: 100%; aspect-ratio: 1 / 1; background: var(--c-bg-off);
             position: relative; overflow: hidden;
         }
 
-        .viewer-track {
+        .media-track {
             display: flex; height: 100%; width: 100%;
-            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: transform 0.5s var(--ease-out);
             will-change: transform;
         }
 
-        .viewer-slide {
+        .media-slide {
             min-width: 100%; height: 100%; display: flex;
-            align-items: center; justify-content: center; background: #fff;
+            align-items: center; justify-content: center;
         }
 
-        .viewer-slide img {
+        .media-slide img {
             width: 100%; height: 100%; object-fit: contain;
-            animation: fadeIn 0.8s ease;
+            cursor: zoom-in;
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* 分页指示点 */
-        .viewer-dots {
-            position: absolute; bottom: 20px; left: 0; right: 0;
-            display: flex; justify-content: center; gap: 8px; z-index: 100;
+        .media-dots {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 8px; z-index: 10;
         }
-        .v-dot {
-            width: 6px; height: 6px; background: rgba(0,0,0,0.12);
-            border-radius: 50%; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .dot {
+            width: 6px; height: 6px; background: rgba(0,0,0,0.15);
+            border-radius: 50%; transition: all 0.3s ease;
         }
-        .v-dot.active {
-            background: var(--primary-hex); width: 22px; border-radius: 4px;
+        .dot.active {
+            background: var(--p-hex); width: 20px; border-radius: 4px;
         }
 
-        /* =========================================
-           4. 详情排版容器 (严格排版规范)
-           ========================================= */
-        .detail-card {
-            padding: 30px 24px 120px; border-radius: 28px 28px 0 0;
-            background: var(--white); margin-top: -25px; position: relative;
-            box-shadow: 0 -15px 40px rgba(0,0,0,0.04);
+        /* 5. 详情信息排版系统 */
+        .info-card {
+            padding: 32px 24px 120px; border-radius: 28px 28px 0 0;
+            background: var(--c-bg-page); margin-top: -24px; position: relative;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.05);
         }
 
-        /* 价格排版系统 */
-        .price-layout { display: flex; align-items: baseline; color: var(--danger-hex); margin-bottom: 18px; }
-        .p-sym { font-size: var(--font-price-sym); font-weight: 800; }
-        .p-main { font-size: var(--font-price-big); font-weight: 950; margin: 0 4px; letter-spacing: -1.5px; }
-        .p-unit { font-size: var(--font-unit); color: var(--color-sub); font-weight: 400; }
+        .price-row {
+            display: flex; align-items: baseline; color: var(--danger-hex);
+            margin-bottom: 16px; font-family: "DIN Alternate", sans-serif;
+        }
+        .p-symbol { font-size: 20px; font-weight: 800; }
+        .p-value { font-size: var(--font-price); font-weight: 900; margin: 0 4px; letter-spacing: -1.5px; }
+        .p-unit { font-size: 18px; color: var(--c-text-sub); font-weight: 400; }
 
-        /* 标题层级 */
-        .main-h1 {
-            font-size: var(--font-h1); font-weight: 800; line-height: 1.45;
-            color: var(--color-title); margin-bottom: 22px; letter-spacing: -0.2px;
+        .item-title {
+            font-size: var(--font-title); font-weight: 800; line-height: 1.35;
+            color: var(--c-text-title); margin-bottom: 24px;
         }
 
-        /* 标签层级 */
-        .meta-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 35px; }
-        .m-tag {
-            padding: 7px 15px; border-radius: 10px; font-size: var(--font-tag);
-            font-weight: 700; background: #f1f5f9; color: var(--color-body);
-            border: 1px solid rgba(0,0,0,0.02);
+        .tags-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
+        .tag-pill {
+            padding: 7px 16px; border-radius: 10px; font-size: var(--font-small);
+            font-weight: 700; background: #f1f5f9; color: var(--c-text-body);
+            border: 1px solid rgba(0,0,0,0.03);
         }
-        .m-stock-ok { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
-        .m-stock-low { background: #fffbeb; color: #d97706; border-color: #fef3c7; }
-        .m-stock-out { background: #fef2f2; color: #dc2626; border-color: #fee2e2; }
+        .tag-stock-in { background: #ecfdf5; color: #059669; }
+        .tag-stock-out { background: #fef2f2; color: #dc2626; }
 
-        /* 装饰性元素 */
-        .h-divider { height: 1px; background: var(--color-border); margin: 30px 0; border: none; }
+        .divider { height: 1.5px; background: var(--c-border); margin: 30px 0; border: none; }
 
-        /* 文本正文排版 */
         .section-label {
-            font-size: var(--font-label); font-weight: 900; color: var(--color-sub);
-            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px; display: block;
+            font-size: var(--font-tiny); font-weight: 900; color: #cbd5e1;
+            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; display: block;
         }
-        .desc-paragraph {
-            font-size: var(--font-desc); color: var(--color-body); line-height: 1.9;
-            white-space: pre-wrap; word-break: break-word; text-align: justify;
+        .description-content {
+            font-size: var(--font-body); color: var(--c-text-body);
+            line-height: 1.9; white-space: pre-wrap; word-break: break-all;
         }
 
-        /* =========================================
-           5. 骨架屏占位与错误反馈
-           ========================================= */
-        .skel-loader {
-            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-            background-size: 200% 100%; animation: skel-run 1.6s infinite linear;
-            border-radius: 12px;
-        }
-        @keyframes skel-run { from { background-position: 150% 0; } to { background-position: -150% 0; } }
-
-        /* =========================================
-           6. 功能组件：大图查看 (Lightbox)
-           ========================================= */
+        /* 6. 全屏深度缩放查看器 (二次放大) */
         #lightbox {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            z-index: 5000; display: none; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.3s ease;
+            position: fixed; inset: 0; background: #000; z-index: 5000;
+            display: none; align-items: center; justify-content: center;
+            overflow: hidden; touch-action: none;
         }
-        #lightbox.active { display: flex; opacity: 1; }
-        #lb-img { max-width: 95%; max-height: 85%; object-fit: contain; transform: scale(0.9); transition: transform 0.3s ease; }
-        #lightbox.active #lb-img { transform: scale(1); }
+        #lb-stage { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        #lb-img { max-width: 100%; max-height: 100%; transition: transform 0.1s var(--ease-out); will-change: transform; }
+        .close-zoom {
+            position: absolute; top: 40px; right: 30px; color: #fff;
+            padding: 10px; z-index: 6000; cursor: pointer;
+        }
+
+        /* 7. 骨架屏加载状态 */
+        .skeleton-loader {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%; animation: skeleton-run 1.5s infinite;
+        }
+        @keyframes skeleton-run { to { background-position: -200% 0; } }
     </style>
 </head>
 <body>
 
-    <nav class="sticky-nav">
-        <a href="index.html" class="circle-btn" aria-label="返回列表">
+    <nav class="top-nav">
+        <a href="index.html" class="icon-btn" aria-label="返回">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </a>
-        <div class="circle-btn" onclick="location.reload()" style="cursor: pointer;">
+        <div class="icon-btn" onclick="location.reload()" style="cursor: pointer;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
         </div>
     </nav>
 
-    <div id="render-mount">
-        <div class="hero-viewer">
-            <div style="width:100%; height:100%;" class="skel-loader"></div>
+    <div id="lightbox">
+        <div class="close-zoom" onclick="handleZoom(false)">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </div>
-        <div class="detail-card">
-            <div class="skel-loader" style="height:35px; width:45%; margin-bottom:20px;"></div>
-            <div class="skel-loader" style="height:55px; width:92%; margin-bottom:25px;"></div>
-            <div class="skel-loader" style="height:150px; width:100%;"></div>
+        <div id="lb-stage">
+            <img id="lb-img" src="" draggable="false">
         </div>
     </div>
 
-    <div id="lightbox" onclick="closeLightbox()">
-        <img id="lb-img">
+    <div id="app-root">
+        <div class="media-container skeleton-loader"></div>
+        <div class="info-card">
+            <div class="skeleton-loader" style="height:40px; width:40%; margin-bottom:20px;"></div>
+            <div class="skeleton-loader" style="height:60px; width:90%; margin-bottom:20px;"></div>
+            <div class="skeleton-loader" style="height:200px; width:100%;"></div>
+        </div>
     </div>
 
     <script>
         /**
-         * 全量逻辑模块：数据引擎与交互控制器
+         * 全量状态管理器与交互控制逻辑
          */
-        const URL_ENGINE = new URLSearchParams(window.location.search);
-        const CURRENT_ID = URL_ENGINE.get('id');
+        const PARAMS = new URLSearchParams(window.location.search);
+        const ITEM_ID = PARAMS.get('id');
+        
         let state = {
             data: null,
-            imgIndex: 0,
-            imgs: []
+            imgs: [],
+            curIndex: 0,
+            zoom: 1,
+            posX: 0,
+            posY: 0
         };
 
         /**
-         * 1. 启动初始化
+         * 1. 启动初始化流程
          */
-        async function bootstrap() {
-            if (!CURRENT_ID) {
-                window.location.replace('index.html');
-                return;
-            }
+        async function boot() {
+            if (!ITEM_ID) { window.location.replace('index.html'); return; }
 
             try {
-                // 执行全量 API 请求，带缓存穿透
-                const apiResponse = await fetch(`/api/products?id=${CURRENT_ID}&_v=${Date.now()}`);
-                if (!apiResponse.ok) throw new Error("HTTP_ERROR");
+                // 执行深度数据抓取
+                const res = await fetch(`/api/products?id=${ITEM_ID}&timestamp=${Date.now()}`);
+                if (!res.ok) throw new Error("NETWORK_FAIL");
                 
-                const remoteData = await apiResponse.json();
-                state.data = remoteData[0];
+                const list = await res.json();
+                state.data = list[0];
                 
                 if (state.data) {
-                    processAndRender(state.data);
+                    renderDOM(state.data);
                 } else {
-                    renderEmpty();
+                    renderFallback("该物品已从档案库移除");
                 }
-            } catch (fail) {
-                console.error("BOOTSTRAP_FAIL:", fail);
-                renderError();
+            } catch (err) {
+                console.error(err);
+                renderFallback("网络连接超时，请重试");
             }
         }
 
         /**
-         * 2. 数据处理与界面绘制 (修复单位显示逻辑)
+         * 2. 深度渲染引擎 (修复单位显示与排版)
          */
-        function processAndRender(product) {
-            // 解析图片数组逻辑
-            state.imgs = (product.image_url || '').split(',')
-                         .map(u => u.trim())
-                         .filter(u => u.length > 5);
+        function renderDOM(p) {
+            // 图片数组深度解析
+            state.imgs = (p.image_url || '').split(',')
+                         .map(s => s.trim())
+                         .filter(s => s.length > 5);
             
             if (state.imgs.length === 0) {
-                state.imgs = ['https://via.placeholder.com/800x800?text=暂无商品图片资料'];
+                state.imgs = ['https://via.placeholder.com/800?text=IMAGE+NOT+FOUND'];
             }
 
-            // [核心修复] 单位逻辑：针对数据库 NULL 字符串和真空值进行多重防御
-            const rawUnit = product.unit;
-            let displayUnit = "";
-            if (rawUnit && 
-                rawUnit.toUpperCase() !== 'NULL' && 
-                rawUnit.trim() !== '' && 
-                rawUnit !== 'undefined') {
-                displayUnit = `/ ${rawUnit.trim()}`;
-            }
+            // [重点] 单位防御性解析逻辑
+            const rawUnit = p.unit || p.Unit;
+            const validUnit = (rawUnit && 
+                              rawUnit.toString().trim() !== '' && 
+                              rawUnit.toString().toUpperCase() !== 'NULL') 
+                              ? `/ ${rawUnit.trim()}` : '';
 
-            // 库存状态计算
-            const stockVal = Number(product.stock) || 0;
-            let stockStyle = 'm-stock-ok';
-            let stockText = `充足：${stockVal}`;
-            
-            if (stockVal === 0) {
-                stockStyle = 'm-stock-out';
-                stockText = '已售罄 (补货中)';
-            } else if (stockVal <= 2) {
-                stockStyle = 'm-stock-low';
-                stockText = `预警：仅剩 ${stockVal}`;
-            }
+            // 库存状态 UI 计算
+            const stockNum = parseInt(p.stock) || 0;
+            const stockClass = stockNum > 0 ? 'tag-stock-in' : 'tag-stock-out';
+            const stockLabel = stockNum > 0 ? `当前库余：${stockNum}` : '暂时缺货';
 
-            const mount = document.getElementById('render-mount');
-            mount.innerHTML = `
-                <div class="hero-viewer" id="drag-zone">
-                    <div class="viewer-track" id="track">
+            const root = document.getElementById('app-root');
+            root.innerHTML = `
+                <div class="media-container" id="swipe-zone">
+                    <div class="media-track" id="swipe-track">
                         ${state.imgs.map(src => `
-                            <div class="viewer-slide" onclick="openLightbox('${src}')">
-                                <img src="${src}" onerror="this.src='https://via.placeholder.com/800x800?text=图片加载失败'">
+                            <div class="media-slide" onclick="handleZoom(true, '${src}')">
+                                <img src="${src}" onerror="this.src='https://via.placeholder.com/800?text=IMAGE+LOAD+ERROR'">
                             </div>
                         `).join('')}
                     </div>
-                    <div class="viewer-dots" id="dot-bar">
-                        ${state.imgs.map((_, i) => `<div class="v-dot ${i === 0 ? 'active' : ''}"></div>`).join('')}
+                    <div class="media-dots">
+                        ${state.imgs.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}"></div>`).join('')}
                     </div>
                 </div>
 
-                <div class="detail-card">
-                    <div class="price-layout">
-                        <span class="p-sym">${product.currency || '¥'}</span>
-                        <span class="p-main">${product.price}</span>
-                        <span class="p-unit">${displayUnit}</span>
+                <div class="info-card">
+                    <div class="price-row">
+                        <span class="p-symbol">${p.currency || '¥'}</span>
+                        <span class="p-value">${p.price}</span>
+                        <span class="p-unit">${validUnit}</span>
                     </div>
 
-                    <h1 class="main-h1">${product.name}</h1>
+                    <h1 class="item-title">${p.name}</h1>
 
-                    <div class="meta-tags">
-                        <span class="m-tag">${product.category || '通用分类'}</span>
-                        <span class="m-tag ${stockStyle}">${stockText}</span>
+                    <div class="tags-container">
+                        <span class="tag-pill">${p.category || '通用类目'}</span>
+                        <span class="tag-pill ${stockClass}">${stockLabel}</span>
                     </div>
 
-                    <hr class="h-divider">
+                    <hr class="divider">
 
-                    <label class="section-label">详细规格说明</label>
-                    <div class="desc-paragraph">${product.description || '厂家暂未发布该物品的详细文本描述，如有疑问请咨询客服人员。'}</div>
+                    <label class="section-label">详细规格与描述</label>
+                    <div class="description-content">${p.description || '暂无厂家提供的详细文字介绍。'}</div>
                 </div>
             `;
 
-            initSwiperEngine();
+            initSwiper();
         }
 
         /**
-         * 3. 手写手势算法引擎 (展开版逻辑)
+         * 3. 移动端轮播手势引擎 (展开逻辑)
          */
-        function initSwiperEngine() {
-            const track = document.getElementById('track');
-            const dots = document.querySelectorAll('.v-dot');
-            let startX = 0, moveX = 0, isDown = false;
+        function initSwiper() {
+            const track = document.getElementById('swipe-track');
+            const dots = document.querySelectorAll('.dot');
+            let startX = 0, moveX = 0, isDragging = false;
 
             if (state.imgs.length <= 1) return;
 
-            const handleStart = (e) => {
-                isDown = true;
-                startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            track.addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
+                isDragging = true;
                 track.style.transition = 'none';
-            };
+            }, {passive: true});
 
-            const handleMove = (e) => {
-                if (!isDown) return;
-                const currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-                moveX = currentX - startX;
-                const basePercent = -state.imgIndex * 100;
-                track.style.transform = `translateX(calc(${basePercent}% + ${moveX}px))`;
-            };
+            track.addEventListener('touchmove', e => {
+                if (!isDragging) return;
+                moveX = e.touches[0].clientX - startX;
+                const offset = -state.curIndex * 100;
+                track.style.transform = `translateX(calc(${offset}% + ${moveX}px))`;
+            }, {passive: true});
 
-            const handleEnd = () => {
-                if (!isDown) return;
-                isDown = false;
-                track.style.transition = 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
+            track.addEventListener('touchend', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                track.style.transition = 'transform 0.5s var(--ease-out)';
                 
-                const threshold = window.innerWidth * 0.25;
+                const threshold = window.innerWidth / 4;
                 if (Math.abs(moveX) > threshold) {
-                    if (moveX > 0 && state.imgIndex > 0) state.imgIndex--;
-                    else if (moveX < 0 && state.imgIndex < state.imgs.length - 1) state.imgIndex++;
+                    if (moveX > 0 && state.curIndex > 0) state.curIndex--;
+                    else if (moveX < 0 && state.curIndex < state.imgs.length - 1) state.curIndex++;
                 }
                 
-                updateVisuals();
+                track.style.transform = `translateX(-${state.curIndex * 100}%)`;
+                dots.forEach((d, i) => d.classList.toggle('active', i === state.curIndex));
                 moveX = 0;
-            };
-
-            const updateVisuals = () => {
-                track.style.transform = `translateX(-${state.imgIndex * 100}%)`;
-                dots.forEach((d, i) => d.classList.toggle('active', i === state.imgIndex));
-            };
-
-            // 绑定事件
-            const zone = document.getElementById('drag-zone');
-            zone.addEventListener('touchstart', handleStart, {passive: true});
-            zone.addEventListener('touchmove', handleMove, {passive: true});
-            zone.addEventListener('touchend', handleEnd);
-            zone.addEventListener('mousedown', handleStart);
-            window.addEventListener('mousemove', handleMove);
-            window.addEventListener('mouseup', handleEnd);
+            });
         }
 
         /**
-         * 4. 灯箱控制逻辑
+         * 4. 全屏缩放查看引擎 (Pinch & Pan)
          */
-        function openLightbox(src) {
+        function handleZoom(show, src = '') {
             const lb = document.getElementById('lightbox');
-            document.getElementById('lb-img').src = src;
-            lb.classList.add('active');
+            const img = document.getElementById('lb-img');
+            
+            if (show) {
+                img.src = src;
+                lb.style.display = 'flex';
+                initZoomGestures();
+            } else {
+                lb.style.display = 'none';
+                state.zoom = 1; state.posX = 0; state.posY = 0;
+                img.style.transform = `none`;
+            }
         }
 
-        function closeLightbox() {
-            document.getElementById('lightbox').classList.remove('active');
+        function initZoomGestures() {
+            const stage = document.getElementById('lb-stage');
+            const img = document.getElementById('lb-img');
+            let startDist = 0, lastX = 0, lastY = 0;
+
+            stage.addEventListener('touchstart', e => {
+                if (e.touches.length === 2) {
+                    startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                } else {
+                    lastX = e.touches[0].pageX;
+                    lastY = e.touches[0].pageY;
+                }
+            }, {passive: false});
+
+            stage.addEventListener('touchmove', e => {
+                e.preventDefault();
+                if (e.touches.length === 2) {
+                    const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                    state.zoom = Math.min(Math.max(1, (dist / startDist)), 4);
+                } else if (state.zoom > 1) {
+                    state.posX += (e.touches[0].pageX - lastX);
+                    state.posY += (e.touches[0].pageY - lastY);
+                    lastX = e.touches[0].pageX; lastY = e.touches[0].pageY;
+                }
+                img.style.transform = `translate(${state.posX}px, ${state.posY}px) scale(${state.zoom})`;
+            }, {passive: false});
         }
 
-        function renderError() {
-            document.getElementById('render-mount').innerHTML = `<div style="padding:100px 20px;text-align:center;color:var(--color-sub);">加载失败，请检查网络连接</div>`;
+        function renderFallback(msg) {
+            document.getElementById('app-root').innerHTML = `
+                <div style="padding:150px 24px; text-align:center;">
+                    <p style="color:var(--c-text-sub); font-size:16px;">${msg}</p>
+                    <a href="index.html" style="display:inline-block; margin-top:20px; color:var(--p-hex); font-weight:700; text-decoration:none;">返回列表</a>
+                </div>`;
         }
 
-        function renderEmpty() {
-            document.getElementById('render-mount').innerHTML = `<div style="padding:100px 20px;text-align:center;color:var(--color-sub);">该商品已下架或移出库房</div>`;
-        }
-
-        // 启动系统
-        window.addEventListener('DOMContentLoaded', bootstrap);
+        // 入口执行
+        window.addEventListener('DOMContentLoaded', boot);
     </script>
 </body>
 </html>
