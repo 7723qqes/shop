@@ -5,18 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>物品详情</title>
     <style>
-        :root { --primary: #4f46e5; --danger: #f43f5e; --text: #1e293b; --safe: #10b981; --warn: #f59e0b; }
-        body { font-family: system-ui, sans-serif; background: #f8fafc; margin: 0; color: var(--text); overflow-x: hidden; }
+        :root { 
+            --primary: #4f46e5; --danger: #f43f5e; --text: #1e293b; 
+            --safe: #10b981; --warn: #f59e0b; --sub-text: #94a3b8;
+        }
+        
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; margin: 0; color: var(--text); }
         .page { max-width: 600px; margin: 0 auto; background: #fff; min-height: 100vh; position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.05); }
         
+        /* 返回按钮 */
         .btn-back { 
             position: absolute; top: 15px; left: 15px; z-index: 100; 
             background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 12px; 
             text-decoration: none; color: #000; font-weight: bold; font-size: 13px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); backdrop-filter: blur(5px);
         }
 
-        /* 轮播逻辑 */
+        /* 轮播图区域 */
         .slider-box { width: 100%; aspect-ratio: 1/1; position: relative; overflow: hidden; background: #f1f5f9; }
         .slider-track { display: flex; height: 100%; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .slider-item { min-width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -27,43 +32,55 @@
             width: 40px; height: 40px; background: rgba(255,255,255,0.8); 
             border: none; border-radius: 50%; cursor: pointer; z-index: 10;
             display: flex; align-items: center; justify-content: center; font-size: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .arrow-prev { left: 10px; } .arrow-next { right: 10px; }
 
-        /* 内容详情 */
-        .content { padding: 20px; }
-        .price { font-size: 1.8rem; font-weight: 800; color: var(--danger); margin-bottom: 8px; }
-        .title { font-size: 1.1rem; font-weight: 700; line-height: 1.4; margin: 0 0 15px 0; }
-        .tag-row { display: flex; gap: 8px; margin-bottom: 25px; }
-        .pill { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; background: #f1f5f9; }
-        .desc-body { border-top: 1px solid #f1f5f9; padding-top: 20px; font-size: 0.95rem; line-height: 1.7; color: #475569; white-space: pre-wrap; }
+        /* 内容详情区 */
+        .content { padding: 25px 20px; }
+        .price-row { display: flex; align-items: baseline; color: var(--danger); margin-bottom: 10px; }
+        .currency { font-size: 1.2rem; font-weight: 800; margin-right: 2px; }
+        .amount { font-size: 2.2rem; font-weight: 900; }
+        .unit { font-size: 1rem; color: var(--sub-text); font-weight: normal; margin-left: 5px; }
 
-        /* 图片预览查看器 */
+        .title { font-size: 1.25rem; font-weight: 800; line-height: 1.4; margin: 0 0 15px 0; }
+        .tag-row { display: flex; gap: 8px; margin-bottom: 25px; }
+        .pill { padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; background: #f1f5f9; }
+        .stock-pill { color: #fff; }
+
+        .desc-box { border-top: 1px solid #f1f5f9; padding-top: 20px; }
+        .desc-title { font-size: 0.9rem; color: var(--sub-text); font-weight: bold; margin-bottom: 10px; display: block; }
+        .desc-body { font-size: 1rem; line-height: 1.7; color: #475569; white-space: pre-wrap; }
+
+        /* 全屏图片查看器 (支持缩放拖拽) */
         #viewer { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 2000; 
             display: none; align-items: center; justify-content: center; overflow: hidden; touch-action: none;
         }
         #vImg { transition: transform 0.1s ease; cursor: grab; user-select: none; max-width: 100%; max-height: 100%; }
         #vImg:active { cursor: grabbing; }
-        .close-view { position: absolute; top: 25px; right: 25px; color: #fff; font-size: 35px; cursor: pointer; z-index: 2100; font-family: serif; }
-        .tip { position: absolute; bottom: 20px; color: rgba(255,255,255,0.5); font-size: 12px; }
+        .close-view { position: absolute; top: 25px; right: 25px; color: #fff; font-size: 40px; cursor: pointer; z-index: 2100; font-family: sans-serif; }
+        .viewer-tip { position: absolute; bottom: 30px; color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; width: 100%; pointer-events: none; }
     </style>
 </head>
 <body>
+
     <div id="viewer">
         <span class="close-view" onclick="closeViewer()">×</span>
         <img id="vImg" src="" draggable="false">
-        <div class="tip">滚轮缩放 / 左键拖动</div>
+        <div class="viewer-tip">滚轮缩放 / 按住拖动查看细节</div>
     </div>
 
     <div class="page">
-        <a href="index.html" class="btn-back">⇠ 返回</a>
+        <a href="index.html" class="btn-back">⇠ 返回列表</a>
+        
         <div class="slider-box" id="slider">
-            <button class="nav-arrow arrow-prev" onclick="move(-1)">‹</button>
-            <button class="nav-arrow arrow-next" onclick="move(1)">›</button>
+            <button class="nav-arrow arrow-prev" id="btnPrev" onclick="move(-1)">‹</button>
+            <button class="nav-arrow arrow-next" id="btnNext" onclick="move(1)">›</button>
             <div id="track" class="slider-track"></div>
         </div>
-        <div id="app" class="content">加载中...</div>
+
+        <div id="app" class="content">正在获取最新数据...</div>
     </div>
 
     <script>
@@ -72,48 +89,71 @@
         let scale = 1, posX = 0, posY = 0, isDragging = false, startX, startY;
 
         async function load() {
-            const cache = localStorage.getItem('inv_cache_v2');
+            // 1. 优先从主页缓存读取，秒开界面
+            const cache = localStorage.getItem('inv_cache_supa');
             if (cache) {
                 const item = JSON.parse(cache).find(i => i.id == pid);
                 if (item) render(item);
             }
+            // 2. 异步请求服务器最新状态
             try {
                 const res = await fetch(`/api/products?id=${pid}`);
                 const data = await res.json();
                 if (data[0]) render(data[0]);
-            } catch (e) {}
+            } catch (e) {
+                console.error("加载详情失败");
+            }
         }
 
         function render(p) {
+            // 处理图片数组
             images = (p.image_url || "").split(',').map(u => u.trim()).filter(Boolean);
-            document.getElementById('track').innerHTML = images.map(u => `
+            const track = document.getElementById('track');
+            track.innerHTML = images.map(u => `
                 <div class="slider-item"><img src="${u}" onclick="openViewer('${u}')"></div>
             `).join('');
             
+            // 如果只有一张图，隐藏切换箭头
+            document.getElementById('btnPrev').style.display = images.length > 1 ? 'flex' : 'none';
+            document.getElementById('btnNext').style.display = images.length > 1 ? 'flex' : 'none';
+
+            // 库存颜色逻辑
             const s = Number(p.stock) || 0;
-            const col = s === 0 ? 'var(--danger)' : (s <= 2 ? 'var(--warn)' : 'var(--safe)');
+            const sCol = s === 0 ? 'var(--danger)' : (s <= 2 ? 'var(--warn)' : 'var(--safe)');
+
+            // 货币与单位逻辑
+            const curStr = p.currency || '¥';
+            const unitStr = p.unit ? `<span class="unit"> / ${p.unit}</span>` : '';
 
             document.getElementById('app').innerHTML = `
-                <div class="price">¥${p.price}</div>
+                <div class="price-row">
+                    <span class="currency">${curStr}</span>
+                    <span class="amount">${p.price}</span>
+                    ${unitStr}
+                </div>
                 <h1 class="title">${p.name}</h1>
                 <div class="tag-row">
                     <span class="pill">${p.category || '未分类'}</span>
-                    <span class="pill" style="background:${col}; color:#fff">库存 (${s})</span>
+                    <span class="pill stock-pill" style="background:${sCol}">库存 (${s})</span>
                 </div>
-                <div class="desc-body">${p.description || "暂无详情。"}</div>`;
+                <div class="desc-box">
+                    <span class="desc-title">物品描述</span>
+                    <div class="desc-body">${p.description || "暂无详细介绍。"}</div>
+                </div>
+            `;
             
             if (images.length > 1) bindTouch();
         }
 
-        // 无限轮播
+        /* 无限轮播逻辑 */
         function move(dir) {
             cur += dir;
-            if (cur < 0) cur = images.length - 1;
-            if (cur >= images.length) cur = 0;
+            if (cur < 0) cur = images.length - 1; // 第一张切上一张 -> 到最后
+            if (cur >= images.length) cur = 0;    // 最后一张切下一张 -> 回第一张
             document.getElementById('track').style.transform = `translateX(-${cur * 100}%)`;
         }
 
-        // 缩放拖拽逻辑
+        /* 全屏查看器逻辑 */
         const vImg = document.getElementById('vImg');
         const viewer = document.getElementById('viewer');
 
@@ -121,17 +161,24 @@
             vImg.src = u;
             viewer.style.display = 'flex';
             scale = 1; posX = 0; posY = 0;
-            updateT();
+            updateTransform();
+            document.body.style.overflow = 'hidden'; // 禁止页面滚动
         }
-        function closeViewer() { viewer.style.display = 'none'; }
 
+        function closeViewer() {
+            viewer.style.display = 'none';
+            document.body.style.overflow = ''; // 恢复页面滚动
+        }
+
+        // 滚轮缩放
         viewer.onwheel = (e) => {
             e.preventDefault();
             const delta = e.deltaY > 0 ? -0.2 : 0.2;
             scale = Math.min(Math.max(0.5, scale + delta), 5);
-            updateT();
+            updateTransform();
         };
 
+        // 鼠标/手指拖拽逻辑
         vImg.onmousedown = (e) => {
             isDragging = true;
             startX = e.clientX - posX;
@@ -142,14 +189,16 @@
             if (!isDragging) return;
             posX = e.clientX - startX;
             posY = e.clientY - startY;
-            updateT();
+            updateTransform();
         };
+
         window.onmouseup = () => isDragging = false;
 
-        function updateT() {
+        function updateTransform() {
             vImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
         }
 
+        // 手机端左右滑动切换图片
         function bindTouch() {
             let sX = 0, slider = document.getElementById('slider');
             slider.ontouchstart = e => sX = e.touches[0].clientX;
@@ -158,6 +207,7 @@
                 if (Math.abs(diff) > 50) move(diff > 0 ? 1 : -1);
             }
         }
+
         load();
     </script>
 </body>
