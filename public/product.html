@@ -3,173 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>物品详情</title>
+    <title>物品详情 - 完整版</title>
     <style>
-        :root { --primary: #4f46e5; --danger: #ef4444; --text: #1e293b; --safe: #22c55e; --warn: #f59e0b; }
-        body { font-family: -apple-system, sans-serif; background: #f1f5f9; margin: 0; color: var(--text); -webkit-font-smoothing: antialiased; }
-        
-        .container { max-width: 600px; margin: 0 auto; background: #fff; min-height: 100vh; position: relative; }
-        
-        /* 顶部导航 */
-        .top-nav { position: absolute; top: 15px; left: 15px; z-index: 1000; }
-        .back-circle { 
-            width: 40px; height: 40px; background: rgba(255,255,255,0.9); border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; text-decoration: none; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); backdrop-filter: blur(5px);
+        /* =========================================
+           1. 样式变量与基础定义
+           ========================================= */
+        :root {
+            --p-color: #4f46e5;
+            --danger: #ef4444;
+            --text: #1e293b;
+            --text-light: #94a3b8;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --safe: #10b981;
+            --warn: #f59e0b;
         }
 
-        /* 轮播系统 */
-        .gallery { width: 100%; aspect-ratio: 1/1; position: relative; overflow: hidden; background: #fff; }
-        .track { display: flex; height: 100%; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
-        .slide { min-width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-        .slide img { width: 100%; height: 100%; object-fit: contain; }
-
-        .pagination { 
-            position: absolute; bottom: 20px; width: 100%; display: flex; 
-            justify-content: center; gap: 8px; z-index: 100; pointer-events: none;
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg); color: var(--text); line-height: 1.6;
         }
-        .dot { width: 8px; height: 8px; background: rgba(0,0,0,0.1); border-radius: 50%; transition: all 0.3s; }
-        .dot.active { background: var(--primary); width: 22px; border-radius: 5px; }
 
-        .arrow { 
-            position: absolute; top: 50%; transform: translateY(-50%); 
-            width: 44px; height: 44px; background: rgba(255,255,255,0.7); 
-            border-radius: 50%; border: none; z-index: 100; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+        .main-layout { max-width: 600px; margin: 0 auto; background: var(--white); min-height: 100vh; position: relative; }
+
+        /* =========================================
+           2. 顶部交互组件
+           ========================================= */
+        .top-bar {
+            position: absolute; top: 15px; left: 15px; z-index: 1000;
         }
-        .arrow-l { left: 10px; } .arrow-r { right: 10px; }
-
-        /* 内容详情 */
-        .details { padding: 30px 20px 100px; }
-        .price-area { display: flex; align-items: baseline; color: var(--danger); margin-bottom: 15px; }
-        .currency { font-size: 1.4rem; font-weight: 800; }
-        .price-val { font-size: 2.8rem; font-weight: 900; margin-left: 4px; }
-        .unit-info { font-size: 1.1rem; color: #94a3b8; margin-left: 8px; }
-
-        .product-title { font-size: 1.5rem; font-weight: 800; line-height: 1.3; margin: 0 0 20px 0; color: #0f172a; }
-        .badges { display: flex; gap: 10px; margin-bottom: 30px; }
-        .badge { padding: 6px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; background: #f1f5f9; }
-
-        .section-label { font-size: 0.9rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px; display: block; letter-spacing: 1px; }
-        .description { font-size: 1.05rem; line-height: 1.8; color: #475569; white-space: pre-wrap; }
-
-        /* 深度预览器 */
-        #viewer { 
-            position: fixed; inset: 0; background: #000; z-index: 9999; display: none; 
-            align-items: center; justify-content: center; overflow: hidden; touch-action: none;
+        .btn-back {
+            width: 44px; height: 44px; background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3); transition: 0.2s;
         }
-        #viewer img { max-width: 100%; max-height: 100%; transition: transform 0.1s; }
-        .close-btn { position: absolute; top: 30px; right: 25px; color: #fff; font-size: 40px; cursor: pointer; }
+        .btn-back:active { transform: scale(0.9); }
+
+        /* =========================================
+           3. 轮播图系统 (精细化实现)
+           ========================================= */
+        .gallery-viewport {
+            width: 100%; aspect-ratio: 1/1; position: relative; overflow: hidden; background: #fff;
+        }
+        .gallery-track {
+            display: flex; height: 100%; transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .gallery-slide {
+            min-width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+        .gallery-slide img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* 指示器 */
+        .gallery-dots {
+            position: absolute; bottom: 20px; width: 100%; display: flex;
+            justify-content: center; gap: 8px; z-index: 10;
+        }
+        .dot {
+            width: 8px; height: 8px; background: rgba(0,0,0,0.15); border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dot.active { background: var(--p-color); width: 20px; border-radius: 4px; }
+
+        /* 左右切图按钮 */
+        .nav-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 40px; height: 40px; background: rgba(255,255,255,0.7);
+            border-radius: 50%; border: none; cursor: pointer; z-index: 5;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .nav-arrow:hover { background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .arrow-left { left: 10px; }
+        .arrow-right { right: 10px; }
+
+        /* =========================================
+           4. 详情信息区
+           ========================================= */
+        .info-panel { padding: 30px 20px 100px; animation: fadeInUp 0.6s ease-out; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .price-container { display: flex; align-items: baseline; color: var(--danger); margin-bottom: 12px; }
+        .currency-symbol { font-size: 1.4rem; font-weight: 800; }
+        .price-value { font-size: 2.8rem; font-weight: 900; margin-left: 4px; letter-spacing: -1px; }
+        .unit-text { font-size: 1.1rem; color: var(--text-light); margin-left: 8px; font-weight: 400; }
+
+        .item-name { font-size: 1.5rem; font-weight: 800; line-height: 1.35; margin-bottom: 20px; color: #0f172a; }
+
+        .tag-row { display: flex; gap: 10px; margin-bottom: 30px; }
+        .info-tag { padding: 8px 16px; border-radius: 12px; font-size: 14px; font-weight: 700; background: #f1f5f9; }
+
+        .section-header {
+            font-size: 0.9rem; font-weight: 900; color: #cbd5e1;
+            text-transform: uppercase; margin-bottom: 15px; display: block;
+            letter-spacing: 1.5px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;
+        }
+        .item-description { font-size: 1.1rem; line-height: 1.8; color: #475569; white-space: pre-wrap; margin-bottom: 40px; }
+
+        /* =========================================
+           5. 深度大图查看器 (Lightbox)
+           ========================================= */
+        #lightbox {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999;
+            display: none; align-items: center; justify-content: center; touch-action: none;
+        }
+        #zoom-img { max-width: 100%; max-height: 100%; transition: transform 0.1s ease; cursor: grab; }
+        .close-lightbox { position: absolute; top: 30px; right: 25px; color: #fff; font-size: 40px; cursor: pointer; z-index: 10001; }
+
+        /* =========================================
+           6. 占位骨架屏
+           ========================================= */
+        .skeleton { background: #f1f5f9; border-radius: 8px; }
+        .sk-title { height: 30px; width: 80%; margin-bottom: 20px; }
+        .sk-price { height: 40px; width: 40%; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="viewer" onclick="closeViewer()"><span class="close-btn">&times;</span><img id="vImg"></div>
+    <div id="lightbox">
+        <span class="close-lightbox" onclick="toggleLightbox(false)">&times;</span>
+        <img id="zoom-img" draggable="false">
+    </div>
 
-    <div class="container">
-        <div class="top-nav">
-            <a href="index.html" class="back-circle">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>
+    <div class="main-layout">
+        <div class="top-bar">
+            <a href="index.html" class="btn-back">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
             </a>
         </div>
 
-        <div class="gallery" id="slider">
-            <button class="arrow arrow-l" onclick="move(-1)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg></button>
-            <button class="arrow arrow-r" onclick="move(1)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M9 18l6-6-6-6"/></svg></button>
-            <div id="track" class="track"></div>
-            <div id="dots" class="pagination"></div>
+        <div class="gallery-viewport" id="gallery">
+            <button class="nav-arrow arrow-left" onclick="slide(-1)">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="nav-arrow arrow-right" onclick="slide(1)">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+            <div id="gallery-track" class="gallery-track"></div>
+            <div id="gallery-dots" class="gallery-dots"></div>
         </div>
 
-        <div id="app" class="details">
-            <div style="text-align:center; padding:50px; color:#94a3b8;">正在加载详细信息...</div>
+        <div id="detail-content" class="info-panel">
+            <div class="skeleton sk-price"></div>
+            <div class="skeleton sk-title"></div>
+            <div style="height:100px" class="skeleton"></div>
         </div>
     </div>
 
     <script>
-        const pid = new URLSearchParams(location.search).get("id");
-        let images = [], curIndex = 0;
+        /**
+         * 初始化变量
+         */
+        const urlParams = new URLSearchParams(location.search);
+        const productId = urlParams.get("id");
+        let images = [], currentIndex = 0;
 
-        async function loadProduct() {
+        // 缩放状态
+        let scale = 1, lastScale = 1, startX = 0, startY = 0, currentX = 0, currentY = 0;
+
+        /**
+         * 数据加载
+         */
+        async function initPage() {
+            if (!productId) { location.href = 'index.html'; return; }
+
+            // 1. 尝试从本地缓存读取（即时显示）
+            const cached = localStorage.getItem('v35_data');
+            if (cached) {
+                const item = JSON.parse(cached).find(p => p.id == productId);
+                if (item) render(item);
+            }
+
+            // 2. 异步同步最新数据
             try {
-                // 尝试从缓存获取
-                const cache = localStorage.getItem('full_shop_data');
-                let product;
-                if (cache) {
-                    product = JSON.parse(cache).find(i => i.id == pid);
-                }
-
-                // 异步刷新
-                const res = await fetch(`/api/products?id=${pid}`);
+                const res = await fetch(`/api/products?id=${productId}`);
                 const data = await res.json();
                 if (data[0]) render(data[0]);
-                else if (product) render(product);
             } catch (e) {
-                console.error("Load failed");
+                console.error("Fetch detail failed");
             }
         }
 
-        function render(p) {
-            images = (p.image_url || "").split(',').map(u => u.trim()).filter(Boolean);
-            const track = document.getElementById('track');
-            const dots = document.getElementById('dots');
+        /**
+         * 页面渲染
+         */
+        function render(item) {
+            images = (item.image_url || "").split(',').map(u => u.trim()).filter(Boolean);
+            if (images.length === 0) images = ['https://via.placeholder.com/600?text=No+Image'];
 
-            track.innerHTML = images.map(u => `<div class="slide"><img src="${u}" onclick="openViewer('${u}')"></div>`).join('');
+            const track = document.getElementById('gallery-track');
+            const dots = document.getElementById('gallery-dots');
+
+            // 渲染图片
+            track.innerHTML = images.map(url => `
+                <div class="gallery-slide">
+                    <img src="${url}" onclick="toggleLightbox(true, '${url}')" onerror="this.src='https://via.placeholder.com/600?text=Image+Load+Error'">
+                </div>
+            `).join('');
+
+            // 渲染指示点
             dots.innerHTML = images.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
             
+            // 隐藏单图时的箭头
             if (images.length <= 1) {
-                document.querySelectorAll('.arrow').forEach(a => a.style.display = 'none');
+                document.querySelectorAll('.nav-arrow').forEach(a => a.style.display = 'none');
             }
 
-            const stock = Number(p.stock) || 0;
-            const color = stock === 0 ? 'var(--danger)' : (stock <= 2 ? 'var(--warn)' : 'var(--safe)');
-            const currency = p.currency || '¥';
-            const unit = p.unit ? `<span class="unit-info">/ ${p.unit}</span>` : '';
+            // 状态逻辑
+            const stock = Number(item.stock) || 0;
+            const stockColor = stock === 0 ? 'var(--danger)' : (stock <= 2 ? 'var(--warn)' : 'var(--safe)');
+            const currency = item.currency || '¥';
+            const unitHtml = item.unit ? `<span class="unit-text">/ ${item.unit}</span>` : '';
 
-            document.getElementById('app').innerHTML = `
-                <div class="price-area">
-                    <span class="currency">${currency}</span>
-                    <span class="price-val">${p.price}</span>
-                    ${unit}
+            document.getElementById('detail-content').innerHTML = `
+                <div class="price-container">
+                    <span class="currency-symbol">${currency}</span>
+                    <span class="price-value">${item.price}</span>
+                    ${unitHtml}
                 </div>
-                <h1 class="product-title">${p.name}</h1>
-                <div class="badges">
-                    <span class="badge" style="background:#eff6ff; color:#3b82f6;">${p.category || '未分类'}</span>
-                    <span class="badge" style="background:${color}; color:#fff;">库存状况: ${stock}</span>
+                <h1 class="item-name">${item.name}</h1>
+                <div class="tag-row">
+                    <span class="info-tag" style="color:var(--p-color); background:#eef2ff;">${item.category || '默认分类'}</span>
+                    <span class="info-tag" style="background:${stockColor}; color:#fff;">库存：${stock}</span>
                 </div>
-                <div class="section-label">物品详情描述</div>
-                <div class="description">${p.description || "暂无相关详细描述。"}</div>
+                <span class="section-header">物品说明</span>
+                <div class="item-description">${item.description || "暂无该物品的详细介绍说明。"}</div>
             `;
-            
-            if(images.length > 1) initTouch();
+
+            initSwiper();
         }
 
-        function move(dir) {
+        /**
+         * 轮播逻辑
+         */
+        function slide(direction) {
             if (images.length <= 1) return;
-            curIndex = (curIndex + dir + images.length) % images.length;
-            document.getElementById('track').style.transform = `translateX(-${curIndex * 100}%)`;
-            document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === curIndex));
-        }
-
-        // 简单的全屏预览逻辑
-        function openViewer(src) {
-            const v = document.getElementById('viewer');
-            document.getElementById('vImg').src = src;
-            v.style.display = 'flex';
-        }
-        function closeViewer() { document.getElementById('viewer').style.display = 'none'; }
-
-        // 滑动手势支持
-        function initTouch() {
-            let startX = 0;
-            const slider = document.getElementById('slider');
-            slider.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-            slider.addEventListener('touchend', e => {
-                const diff = startX - e.changedTouches[0].clientX;
-                if (Math.abs(diff) > 50) move(diff > 0 ? 1 : -1);
+            currentIndex = (currentIndex + direction + images.length) % images.length;
+            
+            const track = document.getElementById('gallery-track');
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+            
+            document.querySelectorAll('.dot').forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === currentIndex);
             });
         }
 
-        loadProduct();
+        /**
+         * 滑动手势引擎 (Swiper)
+         */
+        function initSwiper() {
+            const gallery = document.getElementById('gallery');
+            let sX = 0, moveX = 0;
+
+            gallery.addEventListener('touchstart', e => {
+                sX = e.touches[0].clientX;
+            }, {passive: true});
+
+            gallery.addEventListener('touchend', e => {
+                moveX = e.changedTouches[0].clientX;
+                const diff = sX - moveX;
+                if (Math.abs(diff) > 50) {
+                    slide(diff > 0 ? 1 : -1);
+                }
+            }, {passive: true});
+        }
+
+        /**
+         * 灯箱查看器逻辑 (支持缩放)
+         */
+        function toggleLightbox(show, src = '') {
+            const lb = document.getElementById('lightbox');
+            const img = document.getElementById('zoom-img');
+            if (show) {
+                img.src = src;
+                lb.style.display = 'flex';
+                resetZoom();
+            } else {
+                lb.style.display = 'none';
+            }
+        }
+
+        function resetZoom() {
+            scale = 1; currentX = 0; currentY = 0;
+            updateImgTransform();
+        }
+
+        function updateImgTransform() {
+            const img = document.getElementById('zoom-img');
+            img.style.transform = `translate(${currentX}px, ${currentY}px) scale(${scale})`;
+        }
+
+        // 处理大图缩放手势 (简化版 PC/Mobile 兼容)
+        const zoomImg = document.getElementById('zoom-img');
+        zoomImg.addEventListener('wheel', e => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.2 : 0.2;
+            scale = Math.min(Math.max(0.5, scale + delta), 4);
+            updateImgTransform();
+        }, {passive: false});
+
+        /**
+         * 页面启动
+         */
+        initPage();
     </script>
 </body>
 </html>
