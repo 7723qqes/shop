@@ -3,392 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>物品详情全量版 - 系统</title>
+    <title>物品详情 - 档案管理系统</title>
     <style>
         /* =========================================
-           1. 深度 CSS 变量系统 (Design Tokens)
+           1. 核心设计系统 (Design System)
            ========================================= */
         :root {
-            /* 品牌核心色值 */
-            --p-hex: #4f46e5;
-            --p-rgb: 79, 70, 229;
-            --danger-hex: #ef4444;
-            --success-hex: #10b981;
+            --p-color: #4f46e5;
+            --p-soft: #eef2ff;
+            --danger: #ef4444;
+            --success: #10b981;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --bg-body: #ffffff;
+            --bg-alt: #f8fafc;
+            --border: #f1f5f9;
             
-            /* 文字排版层级 - 强制锁定解决大小不一 */
-            --font-price: 36px;
-            --font-title: 24px;
-            --font-body: 16px;
-            --font-small: 13px;
-            --font-tiny: 11px;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
             
-            /* 色彩语义层级 */
-            --c-text-title: #0f172a;
-            --c-text-body: #334155;
-            --c-text-sub: #64748b;
-            --c-bg-page: #ffffff;
-            --c-bg-off: #f8fafc;
-            --c-border: #f1f5f9;
-            
-            /* 交互与动效 */
-            --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
-            --shadow-float: 0 10px 30px -10px rgba(0,0,0,0.1);
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        /* 2. 基础复位与全局排版控制 */
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            font-variant-numeric: tabular-nums;
-        }
-
+        /* =========================================
+           2. 基础布局复位
+           ========================================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
-            background-color: var(--c-bg-page); color: var(--c-text-title);
-            line-height: 1.6; overflow-x: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            background-color: var(--bg-body); color: var(--text-main);
+            line-height: 1.6; user-select: none;
         }
 
-        /* 3. 顶部沉浸式导航栏 */
+        /* =========================================
+           3. 导航与交互组件
+           ========================================= */
         .top-nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-            padding: 16px; display: flex; justify-content: space-between;
-            pointer-events: none;
+            position: fixed; top: calc(12px + var(--safe-top)); left: 16px;
+            z-index: 1000; display: flex; gap: 12px;
         }
 
         .icon-btn {
-            width: 44px; height: 44px; background: rgba(255, 255, 255, 0.85);
+            width: 42px; height: 42px; background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-decoration: none;
-            color: var(--c-text-title); pointer-events: auto; backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.5); transition: 0.2s var(--ease-out);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.3);
+            text-decoration: none; color: var(--text-main); transition: 0.2s;
         }
-        .icon-btn:active { transform: scale(0.9); background: #eee; }
+        .icon-btn:active { transform: scale(0.9); background: #fff; }
 
-        /* 4. 智能媒体播放与轮播引擎 */
-        .media-container {
-            width: 100%; aspect-ratio: 1 / 1; background: var(--c-bg-off);
-            position: relative; overflow: hidden;
-        }
-
-        .media-track {
-            display: flex; height: 100%; width: 100%;
-            transition: transform 0.5s var(--ease-out);
-            will-change: transform;
-        }
-
-        .media-slide {
-            min-width: 100%; height: 100%; display: flex;
+        /* =========================================
+           4. 媒体预览系统 (带缩放功能)
+           ========================================= */
+        .media-stage {
+            width: 100%; aspect-ratio: 1 / 1; background: var(--bg-alt);
+            overflow: hidden; position: relative; display: flex;
             align-items: center; justify-content: center;
         }
 
-        .media-slide img {
+        #hero-img {
             width: 100%; height: 100%; object-fit: contain;
-            cursor: zoom-in;
+            transition: opacity 0.4s ease;
         }
 
-        .media-dots {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 8px; z-index: 10;
-        }
-        .dot {
-            width: 6px; height: 6px; background: rgba(0,0,0,0.15);
-            border-radius: 50%; transition: all 0.3s ease;
-        }
-        .dot.active {
-            background: var(--p-hex); width: 20px; border-radius: 4px;
+        /* 缩放提示层 */
+        .zoom-hint {
+            position: absolute; bottom: 16px; right: 16px;
+            background: rgba(0,0,0,0.5); color: #fff; padding: 4px 12px;
+            border-radius: 20px; font-size: 11px; font-weight: 600;
+            backdrop-filter: blur(4px); pointer-events: none;
+            display: flex; align-items: center; gap: 6px;
         }
 
-        /* 5. 详情信息排版系统 */
-        .info-card {
-            padding: 32px 24px 120px; border-radius: 28px 28px 0 0;
-            background: var(--c-bg-page); margin-top: -24px; position: relative;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.05);
-        }
-
-        .price-row {
-            display: flex; align-items: baseline; color: var(--danger-hex);
-            margin-bottom: 16px; font-family: "DIN Alternate", sans-serif;
-        }
-        .p-symbol { font-size: 20px; font-weight: 800; }
-        .p-value { font-size: var(--font-price); font-weight: 900; margin: 0 4px; letter-spacing: -1.5px; }
-        .p-unit { font-size: 18px; color: var(--c-text-sub); font-weight: 400; }
-
-        .item-title {
-            font-size: var(--font-title); font-weight: 800; line-height: 1.35;
-            color: var(--c-text-title); margin-bottom: 24px;
-        }
-
-        .tags-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
-        .tag-pill {
-            padding: 7px 16px; border-radius: 10px; font-size: var(--font-small);
-            font-weight: 700; background: #f1f5f9; color: var(--c-text-body);
-            border: 1px solid rgba(0,0,0,0.03);
-        }
-        .tag-stock-in { background: #ecfdf5; color: #059669; }
-        .tag-stock-out { background: #fef2f2; color: #dc2626; }
-
-        .divider { height: 1.5px; background: var(--c-border); margin: 30px 0; border: none; }
-
-        .section-label {
-            font-size: var(--font-tiny); font-weight: 900; color: #cbd5e1;
-            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; display: block;
-        }
-        .description-content {
-            font-size: var(--font-body); color: var(--c-text-body);
-            line-height: 1.9; white-space: pre-wrap; word-break: break-all;
-        }
-
-        /* 6. 全屏深度缩放查看器 (二次放大) */
+        /* 全屏灯箱 (Lightbox) */
         #lightbox {
-            position: fixed; inset: 0; background: #000; z-index: 5000;
-            display: none; align-items: center; justify-content: center;
-            overflow: hidden; touch-action: none;
-        }
-        #lb-stage { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-        #lb-img { max-width: 100%; max-height: 100%; transition: transform 0.1s var(--ease-out); will-change: transform; }
-        .close-zoom {
-            position: absolute; top: 40px; right: 30px; color: #fff;
-            padding: 10px; z-index: 6000; cursor: pointer;
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: none; flex-direction: column; touch-action: none;
         }
 
-        /* 7. 骨架屏加载状态 */
-        .skeleton-loader {
-            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-            background-size: 200% 100%; animation: skeleton-run 1.5s infinite;
+        .lb-header {
+            padding: calc(20px + var(--safe-top)) 20px 20px;
+            display: flex; justify-content: flex-end;
         }
-        @keyframes skeleton-run { to { background-position: -200% 0; } }
+
+        .close-lb { color: #fff; font-size: 32px; font-weight: 200; padding: 10px; }
+
+        .lb-content {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+
+        #zoom-target {
+            max-width: 100%; max-height: 100%; will-change: transform;
+            transition: transform 0.1s var(--ease-out);
+        }
+
+        /* =========================================
+           5. 详情内容排版
+           ========================================= */
+        .detail-container {
+            padding: 30px 20px calc(50px + var(--safe-bottom));
+            max-width: 700px; margin: 0 auto;
+        }
+
+        /* [单位修复版价格显示] */
+        .price-section {
+            display: flex; align-items: baseline; color: var(--danger);
+            margin-bottom: 15px;
+        }
+        .currency { font-size: 20px; font-weight: 800; }
+        .price-val { font-size: 36px; font-weight: 900; margin: 0 4px; letter-spacing: -1px; }
+        .unit-ext { font-size: 18px; color: var(--text-sub); font-weight: 400; }
+
+        .product-title {
+            font-size: 24px; font-weight: 800; line-height: 1.3;
+            color: var(--text-main); margin-bottom: 24px;
+        }
+
+        .meta-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; }
+        .tag-pill {
+            padding: 6px 14px; background: var(--bg-alt); border-radius: 8px;
+            font-size: 13px; font-weight: 700; color: var(--text-sub);
+        }
+        .tag-stock { background: #ecfdf5; color: var(--success); }
+
+        .section-divider {
+            height: 1px; background: var(--border); margin: 30px 0;
+        }
+
+        .info-label {
+            font-size: 12px; font-weight: 900; color: #cbd5e1;
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
+            display: block;
+        }
+
+        .description-text {
+            font-size: 16px; color: #475569; line-height: 1.8;
+            white-space: pre-wrap; word-break: break-all;
+        }
+
+        /* =========================================
+           6. 加载态骨架屏
+           ========================================= */
+        .skeleton-load {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%; animation: loading-move 1.5s infinite;
+        }
+        @keyframes loading-move { to { background-position: -200% 0; } }
     </style>
 </head>
 <body>
 
-    <nav class="top-nav">
-        <a href="index.html" class="icon-btn" aria-label="返回">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    <div class="top-nav">
+        <a href="index.html" class="icon-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
         </a>
-        <div class="icon-btn" onclick="location.reload()" style="cursor: pointer;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-        </div>
-    </nav>
+    </div>
 
     <div id="lightbox">
-        <div class="close-zoom" onclick="handleZoom(false)">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        <div class="lb-header">
+            <div class="close-lb" onclick="toggleLightbox(false)">✕</div>
         </div>
-        <div id="lb-stage">
-            <img id="lb-img" src="" draggable="false">
+        <div class="lb-content" id="lb-stage">
+            <img id="zoom-target" src="" draggable="false">
         </div>
     </div>
 
-    <div id="app-root">
-        <div class="media-container skeleton-loader"></div>
-        <div class="info-card">
-            <div class="skeleton-loader" style="height:40px; width:40%; margin-bottom:20px;"></div>
-            <div class="skeleton-loader" style="height:60px; width:90%; margin-bottom:20px;"></div>
-            <div class="skeleton-loader" style="height:200px; width:100%;"></div>
+    <main id="main-view">
+        <div class="media-stage" onclick="toggleLightbox(true)">
+            <img id="hero-img" src="" alt="商品图片">
+            <div class="zoom-hint">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                点击放大细节
+            </div>
         </div>
-    </div>
+
+        <div class="detail-container">
+            <div id="mount-price" class="price-section">
+                <div class="skeleton-load" style="height:40px; width:120px; border-radius:8px;"></div>
+            </div>
+
+            <h1 id="mount-title" class="product-title">
+                <div class="skeleton-load" style="height:30px; width:80%; border-radius:8px; margin-bottom:10px;"></div>
+                <div class="skeleton-load" style="height:30px; width:50%; border-radius:8px;"></div>
+            </h1>
+
+            <div id="mount-tags" class="meta-tags"></div>
+
+            <div class="section-divider"></div>
+
+            <span class="info-label">物品详情描述</span>
+            <div id="mount-desc" class="description-text">
+                <div class="skeleton-load" style="height:18px; width:100%; border-radius:4px; margin-bottom:8px;"></div>
+                <div class="skeleton-load" style="height:18px; width:90%; border-radius:4px; margin-bottom:8px;"></div>
+                <div class="skeleton-load" style="height:18px; width:95%; border-radius:4px;"></div>
+            </div>
+        </div>
+    </main>
 
     <script>
         /**
-         * 全量状态管理器与交互控制逻辑
+         * [全局常量与状态机]
          */
-        const PARAMS = new URLSearchParams(window.location.search);
-        const ITEM_ID = PARAMS.get('id');
-        
-        let state = {
-            data: null,
-            imgs: [],
-            curIndex: 0,
-            zoom: 1,
-            posX: 0,
-            posY: 0
-        };
+        const URL_PARAMS = new URLSearchParams(window.location.search);
+        const PRODUCT_ID = URL_PARAMS.get('id');
+        let zoomState = { scale: 1, translateX: 0, translateY: 0 };
 
         /**
-         * 1. 启动初始化流程
+         * 1. 核心初始化器
          */
-        async function boot() {
-            if (!ITEM_ID) { window.location.replace('index.html'); return; }
+        async function initProductPage() {
+            if (!PRODUCT_ID) { window.location.replace('index.html'); return; }
 
             try {
-                // 执行深度数据抓取
-                const res = await fetch(`/api/products?id=${ITEM_ID}&timestamp=${Date.now()}`);
-                if (!res.ok) throw new Error("NETWORK_FAIL");
+                // 请求数据并增加随机数防止缓存
+                const response = await fetch(`/api/products?id=${PRODUCT_ID}&_nocache=${Date.now()}`);
+                const data = await response.json();
                 
-                const list = await res.json();
-                state.data = list[0];
-                
-                if (state.data) {
-                    renderDOM(state.data);
-                } else {
-                    renderFallback("该物品已从档案库移除");
-                }
+                const product = Array.isArray(data) ? data[0] : data;
+                if (!product) throw new Error("NOT_FOUND");
+
+                renderProductDetails(product);
+                initTouchEngine();
+
             } catch (err) {
-                console.error(err);
-                renderFallback("网络连接超时，请重试");
+                console.error("DATA_FETCH_ERROR:", err);
+                document.getElementById('main-view').innerHTML = `
+                    <div style="padding:100px 20px; text-align:center; color:#94a3b8;">
+                        <p>无法获取物品档案，可能已被移除</p>
+                        <a href="index.html" style="color:var(--p-color); margin-top:10px; display:inline-block;">返回首页</a>
+                    </div>`;
             }
         }
 
         /**
-         * 2. 深度渲染引擎 (修复单位显示与排版)
+         * 2. 详情渲染逻辑 (深度适配单位逻辑)
          */
-        function renderDOM(p) {
-            // 图片数组深度解析
-            state.imgs = (p.image_url || '').split(',')
-                         .map(s => s.trim())
-                         .filter(s => s.length > 5);
-            
-            if (state.imgs.length === 0) {
-                state.imgs = ['https://via.placeholder.com/800?text=IMAGE+NOT+FOUND'];
-            }
+        function renderProductDetails(p) {
+            // 解析图片数组
+            const imgList = (p.image_url || "").split(',').map(s => s.trim());
+            const mainImg = imgList[0];
 
-            // [重点] 单位防御性解析逻辑
-            const rawUnit = p.unit || p.Unit;
-            const validUnit = (rawUnit && 
-                              rawUnit.toString().trim() !== '' && 
-                              rawUnit.toString().toUpperCase() !== 'NULL') 
-                              ? `/ ${rawUnit.trim()}` : '';
+            // 图像赋值
+            document.getElementById('hero-img').src = mainImg;
+            document.getElementById('zoom-target').src = mainImg;
 
-            // 库存状态 UI 计算
-            const stockNum = parseInt(p.stock) || 0;
-            const stockClass = stockNum > 0 ? 'tag-stock-in' : 'tag-stock-out';
-            const stockLabel = stockNum > 0 ? `当前库余：${stockNum}` : '暂时缺货';
+            // 标题与描述
+            document.getElementById('mount-title').innerText = p.name;
+            document.getElementById('mount-desc').innerText = p.description || "暂无对此物品的详细说明档案。";
 
-            const root = document.getElementById('app-root');
-            root.innerHTML = `
-                <div class="media-container" id="swipe-zone">
-                    <div class="media-track" id="swipe-track">
-                        ${state.imgs.map(src => `
-                            <div class="media-slide" onclick="handleZoom(true, '${src}')">
-                                <img src="${src}" onerror="this.src='https://via.placeholder.com/800?text=IMAGE+LOAD+ERROR'">
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="media-dots">
-                        ${state.imgs.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}"></div>`).join('')}
-                    </div>
-                </div>
+            // [单位判定逻辑] 严格过滤 NULL 和空值
+            const unitValue = p.unit || p.Unit || "";
+            const unitClean = unitValue.toString().trim();
+            const unitHTML = (unitClean && unitClean.toUpperCase() !== "NULL") 
+                             ? `<span class="unit-ext">/ ${unitClean}</span>` : "";
 
-                <div class="info-card">
-                    <div class="price-row">
-                        <span class="p-symbol">${p.currency || '¥'}</span>
-                        <span class="p-value">${p.price}</span>
-                        <span class="p-unit">${validUnit}</span>
-                    </div>
-
-                    <h1 class="item-title">${p.name}</h1>
-
-                    <div class="tags-container">
-                        <span class="tag-pill">${p.category || '通用类目'}</span>
-                        <span class="tag-pill ${stockClass}">${stockLabel}</span>
-                    </div>
-
-                    <hr class="divider">
-
-                    <label class="section-label">详细规格与描述</label>
-                    <div class="description-content">${p.description || '暂无厂家提供的详细文字介绍。'}</div>
-                </div>
+            // 价格区渲染
+            document.getElementById('mount-price').innerHTML = `
+                <span class="currency">${p.currency || '¥'}</span>
+                <span class="price-val">${p.price}</span>
+                ${unitHTML}
             `;
 
-            initSwiper();
+            // 标签区渲染
+            document.getElementById('mount-tags').innerHTML = `
+                <span class="tag-pill">${p.category || '通用分类'}</span>
+                <span class="tag-pill tag-stock">实时库存：${p.stock}</span>
+            `;
+
+            // 更新页面标题
+            document.title = `${p.name} - 详情档案`;
         }
 
         /**
-         * 3. 移动端轮播手势引擎 (展开逻辑)
+         * 3. 交互控制：灯箱切换
          */
-        function initSwiper() {
-            const track = document.getElementById('swipe-track');
-            const dots = document.querySelectorAll('.dot');
-            let startX = 0, moveX = 0, isDragging = false;
-
-            if (state.imgs.length <= 1) return;
-
-            track.addEventListener('touchstart', e => {
-                startX = e.touches[0].clientX;
-                isDragging = true;
-                track.style.transition = 'none';
-            }, {passive: true});
-
-            track.addEventListener('touchmove', e => {
-                if (!isDragging) return;
-                moveX = e.touches[0].clientX - startX;
-                const offset = -state.curIndex * 100;
-                track.style.transform = `translateX(calc(${offset}% + ${moveX}px))`;
-            }, {passive: true});
-
-            track.addEventListener('touchend', () => {
-                if (!isDragging) return;
-                isDragging = false;
-                track.style.transition = 'transform 0.5s var(--ease-out)';
-                
-                const threshold = window.innerWidth / 4;
-                if (Math.abs(moveX) > threshold) {
-                    if (moveX > 0 && state.curIndex > 0) state.curIndex--;
-                    else if (moveX < 0 && state.curIndex < state.imgs.length - 1) state.curIndex++;
-                }
-                
-                track.style.transform = `translateX(-${state.curIndex * 100}%)`;
-                dots.forEach((d, i) => d.classList.toggle('active', i === state.curIndex));
-                moveX = 0;
-            });
-        }
-
-        /**
-         * 4. 全屏缩放查看引擎 (Pinch & Pan)
-         */
-        function handleZoom(show, src = '') {
+        function toggleLightbox(active) {
             const lb = document.getElementById('lightbox');
-            const img = document.getElementById('lb-img');
-            
-            if (show) {
-                img.src = src;
-                lb.style.display = 'flex';
-                initZoomGestures();
-            } else {
-                lb.style.display = 'none';
-                state.zoom = 1; state.posX = 0; state.posY = 0;
-                img.style.transform = `none`;
+            lb.style.display = active ? 'flex' : 'none';
+            if (!active) {
+                // 重置缩放状态
+                zoomState = { scale: 1, translateX: 0, translateY: 0 };
+                updateTransform();
             }
         }
 
-        function initZoomGestures() {
+        /**
+         * 4. 工业级手势缩放算法 (Touch Engine)
+         */
+        function initTouchEngine() {
             const stage = document.getElementById('lb-stage');
-            const img = document.getElementById('lb-img');
-            let startDist = 0, lastX = 0, lastY = 0;
+            const target = document.getElementById('zoom-target');
+            
+            let initialDist = 0;
+            let lastX = 0, lastY = 0;
 
-            stage.addEventListener('touchstart', e => {
+            stage.addEventListener('touchstart', (e) => {
                 if (e.touches.length === 2) {
-                    startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                } else {
+                    // 双指捏合开始
+                    initialDist = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                } else if (e.touches.length === 1) {
+                    // 单指拖拽开始
                     lastX = e.touches[0].pageX;
                     lastY = e.touches[0].pageY;
                 }
-            }, {passive: false});
+            }, { passive: false });
 
-            stage.addEventListener('touchmove', e => {
+            stage.addEventListener('touchmove', (e) => {
                 e.preventDefault();
+
                 if (e.touches.length === 2) {
-                    const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                    state.zoom = Math.min(Math.max(1, (dist / startDist)), 4);
-                } else if (state.zoom > 1) {
-                    state.posX += (e.touches[0].pageX - lastX);
-                    state.posY += (e.touches[0].pageY - lastY);
-                    lastX = e.touches[0].pageX; lastY = e.touches[0].pageY;
+                    // 处理缩放
+                    const currentDist = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    const zoomFactor = currentDist / initialDist;
+                    zoomState.scale = Math.min(Math.max(1, zoomState.scale * zoomFactor), 4);
+                    initialDist = currentDist;
+                } else if (e.touches.length === 1 && zoomState.scale > 1) {
+                    // 处理放大后的拖拽
+                    const deltaX = e.touches[0].pageX - lastX;
+                    const deltaY = e.touches[0].pageY - lastY;
+                    zoomState.translateX += deltaX;
+                    zoomState.translateY += deltaY;
+                    lastX = e.touches[0].pageX;
+                    lastY = e.touches[0].pageY;
                 }
-                img.style.transform = `translate(${state.posX}px, ${state.posY}px) scale(${state.zoom})`;
-            }, {passive: false});
+                updateTransform();
+            }, { passive: false });
         }
 
-        function renderFallback(msg) {
-            document.getElementById('app-root').innerHTML = `
-                <div style="padding:150px 24px; text-align:center;">
-                    <p style="color:var(--c-text-sub); font-size:16px;">${msg}</p>
-                    <a href="index.html" style="display:inline-block; margin-top:20px; color:var(--p-hex); font-weight:700; text-decoration:none;">返回列表</a>
-                </div>`;
+        function updateTransform() {
+            const target = document.getElementById('zoom-target');
+            target.style.transform = `translate(${zoomState.translateX}px, ${zoomState.translateY}px) scale(${zoomState.scale})`;
         }
 
-        // 入口执行
-        window.addEventListener('DOMContentLoaded', boot);
+        // 页面入口
+        window.addEventListener('DOMContentLoaded', initProductPage);
     </script>
 </body>
 </html>
