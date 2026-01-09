@@ -3,102 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>我的智能仓库</title>
+    <title>库存管理系统 - 终极稳定版</title>
     <style>
+        /* 1. 核心变量：包含你要求的颜色体系 */
         :root { 
             --primary: #4f46e5; 
-            --accent: #818cf8;
+            --accent: #818cf8; 
             --bg: #f1f5f9; 
-            --card-bg: #ffffff;
-            --danger: #f43f5e; 
-            --safe: #10b981; 
-            --warn: #f59e0b; 
-            --text-main: #0f172a;
+            --card-bg: #ffffff; 
+            --danger: #f43f5e; /* 库存0的红色 */
+            --safe: #10b981;   /* 库存充足的绿色 */
+            --warn: #f59e0b;   /* 库存紧张的橙色 */
+            --text-main: #0f172a; 
             --text-sub: #64748b;
         }
         
+        /* 2. 页面基础样式：增加背景渐变丰富度 */
         body { 
-            font-family: 'PingFang SC', system-ui, sans-serif; 
+            font-family: 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif; 
             background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); 
             color: var(--text-main); 
-            margin: 0; min-height: 100vh;
+            margin: 0; 
+            min-height: 100vh;
         }
 
-        /* 导航栏毛玻璃与渐变文字 */
+        /* 3. 头部导航：毛玻璃效果 + 渐变标题 */
         .header { 
             background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
-            padding: 20px 15px 10px; position: sticky; top: 0; z-index: 100; 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            padding: 20px 15px 10px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
             border-bottom: 1px solid rgba(255,255,255,0.3);
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
         .header h1 { 
-            font-size: 1.2rem; margin: 0 0 15px 0; text-align: center; 
+            font-size: 1.25rem; 
+            margin: 0 0 15px 0; 
+            text-align: center; 
             background: linear-gradient(to right, var(--primary), var(--accent));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            font-weight: 900; letter-spacing: 1px;
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            font-weight: 900; 
+            letter-spacing: 1px;
         }
         
+        /* 4. 搜索框美化 */
         .search-box { max-width: 600px; margin: 0 auto 15px; position: relative; }
         .search-input { 
-            width: 100%; padding: 12px 45px 12px 20px; border: 2px solid #e2e8f0; 
-            border-radius: 16px; font-size: 15px; outline: none; background: #fff; 
-            transition: 0.3s; box-sizing: border-box; 
+            width: 100%; 
+            padding: 12px 45px 12px 20px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 16px; 
+            font-size: 15px; 
+            outline: none; 
+            background: #fff; 
+            transition: all 0.3s ease; 
+            box-sizing: border-box; 
         }
-        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(79, 70, 229, 0.1); }
-        .search-clear { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #cbd5e1; cursor: pointer; display: none; font-size: 18px; }
+        .search-input:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.1); 
+        }
         
-        .nav-cats { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none; }
+        /* 5. 分类横向滚动：带自动计数 */
+        .nav-cats { 
+            display: flex; 
+            gap: 10px; 
+            overflow-x: auto; 
+            padding: 5px 0 10px; 
+            scrollbar-width: none; 
+        }
         .nav-cats::-webkit-scrollbar { display: none; }
         .cat-item { 
-            padding: 8px 18px; border-radius: 12px; border: none; background: #fff; 
-            color: var(--text-sub); font-size: 13px; font-weight: 600; white-space: nowrap; 
-            cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            padding: 8px 18px; 
+            border-radius: 12px; 
+            border: none; 
+            background: #fff; 
+            color: var(--text-sub); 
+            font-size: 13px; 
+            font-weight: 600; 
+            white-space: nowrap; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
-        .cat-item.active { background: var(--primary); color: #fff; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .cat-item.active { 
+            background: var(--primary); 
+            color: #fff; 
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); 
+        }
 
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; max-width: 1200px; margin: 0 auto; }
-        .card { 
-            background: var(--card-bg); border-radius: 20px; overflow: hidden; text-decoration: none; 
-            color: inherit; border: 1px solid rgba(255,255,255,0.5); display: flex; flex-direction: column; 
-            transition: all 0.3s ease; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); 
+        /* 6. 商品卡片网格布局 */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
+            padding: 15px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
         }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .card { 
+            background: var(--card-bg); 
+            border-radius: 20px; 
+            overflow: hidden; 
+            text-decoration: none; 
+            color: inherit; 
+            border: 1px solid rgba(255,255,255,0.5); 
+            display: flex; 
+            flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); 
+        }
+        .card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); 
+        }
         
-        .img-container { width: 100%; aspect-ratio: 1/1; background: #f8fafc; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .img-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: 0.5s; }
-        .img-container img.loaded { opacity: 1; }
+        .img-container { 
+            width: 100%; 
+            aspect-ratio: 1/1; 
+            background: #f8fafc; 
+            position: relative; 
+            overflow: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .img-container img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transition: transform 0.5s ease; 
+        }
+        .card:hover .img-container img { transform: scale(1.08); }
 
         .info { padding: 15px; flex-grow: 1; }
         .price { color: var(--danger); font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
-        .title { font-size: 0.9rem; font-weight: 600; line-height: 1.5; height: 3em; overflow: hidden; color: var(--text-main); margin-bottom: 15px; }
+        .title { 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            line-height: 1.5; 
+            height: 3em; 
+            overflow: hidden; 
+            margin-bottom: 15px; 
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
         
-        .meta { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 10px; }
+        /* 7. 库存标签样式：你要求的“库存 (数量)”模式 */
+        .meta { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-top: 1px solid #f1f5f9; 
+            padding-top: 10px; 
+        }
         .cat-label { font-size: 11px; color: var(--text-sub); font-weight: 600; }
-        .stock-dot { min-width: 30px; height: 20px; border-radius: 8px; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+        .stock-tag { 
+            padding: 3px 10px; 
+            border-radius: 8px; 
+            color: #fff; 
+            font-size: 10px; 
+            font-weight: 800; 
+        }
         
-        /* 浮动导航：顶/底按钮 */
-        .float-nav { position: fixed; right: 20px; bottom: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 200; }
+        /* 8. 右下角导航按钮：一键顶底 */
+        .float-nav { 
+            position: fixed; 
+            right: 20px; 
+            bottom: 30px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            z-index: 200; 
+        }
         .nav-btn { 
-            width: 45px; height: 45px; background: #fff; border-radius: 15px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; 
-            justify-content: center; cursor: pointer; transition: 0.3s; font-size: 18px; border: none;
+            width: 48px; 
+            height: 48px; 
+            background: #fff; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            border: none; 
+            font-size: 20px; 
+            transition: 0.3s;
         }
         .nav-btn:hover { background: var(--primary); color: #fff; transform: scale(1.1); }
-        #topBtn { display: none; }
+        #topBtn { display: none; } /* 默认隐藏顶部按钮 */
 
-        .highlight { background: #fef08a; padding: 0 2px; border-radius: 4px; font-weight: bold; }
+        /* 搜索高亮文字样式 */
+        .highlight { background: #fef08a; padding: 0 2px; border-radius: 4px; color: #854d0e; font-weight: bold; }
 
-        @media (min-width: 768px) { .grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); } }
+        @media (min-width: 768px) { 
+            .grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; } 
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>库存清单 V2.0</h1>
+        <h1>我的库存 V2.3</h1>
         <div class="search-box">
-            <input type="text" id="searchInput" class="search-input" placeholder="检索物品..." oninput="updateUI()">
-            <div id="clearBtn" class="search-clear" onclick="clearSearch()">×</div>
+            <input type="text" id="searchInput" class="search-input" placeholder="输入关键字检索物品..." oninput="updateUI()">
         </div>
         <div id="catBar" class="nav-cats"></div>
     </div>
@@ -106,71 +219,111 @@
     <div id="productGrid" class="grid"></div>
 
     <div class="float-nav">
-        <button id="topBtn" class="nav-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">▲</button>
-        <button id="bottomBtn" class="nav-btn" onclick="window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})">▼</button>
+        <button id="topBtn" class="nav-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="回顶部">▲</button>
+        <button id="bottomBtn" class="nav-btn" onclick="window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'})" title="去底部">▼</button>
     </div>
 
     <script>
         let products = [];
         let activeCat = '全部';
 
+        // 页面启动初始化
         async function init() {
-            const cache = localStorage.getItem('inv_cache');
-            if (cache) { products = JSON.parse(cache); renderCats(); updateUI(); }
-            fetchData();
+            // 尝试读取上次存储的数据，实现“秒开”
+            const cache = localStorage.getItem('inv_cache_final');
+            if (cache) { 
+                products = JSON.parse(cache); 
+                renderCats(); 
+                updateUI(); 
+            }
+            fetchData(); // 异步更新最新数据
+
+            // 滚动监听：滚动超过400px才显示“回顶部”按钮
             window.onscroll = () => { 
                 document.getElementById('topBtn').style.display = window.scrollY > 400 ? 'flex' : 'none'; 
             };
         }
 
+        // 从API获取数据
         async function fetchData() {
             try {
                 const res = await fetch(`/api/products?t=${Date.now()}`);
                 products = await res.json();
-                localStorage.setItem('inv_cache', JSON.stringify(products));
-                renderCats(); updateUI();
-            } catch (e) {}
+                localStorage.setItem('inv_cache_final', JSON.stringify(products));
+                renderCats(); 
+                updateUI();
+            } catch (e) {
+                console.log("离线模式或网络异常");
+            }
         }
 
+        // 渲染顶部分类统计
         function renderCats() {
-            const counts = products.reduce((acc, p) => { const c = p.category || '未分类'; acc[c] = (acc[c] || 0) + 1; return acc; }, {});
+            const counts = products.reduce((acc, p) => { 
+                const c = p.category || '未分类'; 
+                acc[c] = (acc[c] || 0) + 1; 
+                return acc; 
+            }, {});
+            
             const cats = ['全部', ...Object.keys(counts)];
             document.getElementById('catBar').innerHTML = cats.map(c => {
                 const n = c === '全部' ? products.length : counts[c];
-                return `<button class="cat-item ${activeCat===c?'active':''}" onclick="setCat('${c}')">${c} (${n})</button>`;
+                return `<button class="cat-item ${activeCat===c?'active':''}" onclick="setCategory('${c}')">${c} (${n})</button>`;
             }).join('');
         }
 
-        function setCat(c) { activeCat = c; renderCats(); updateUI(); }
-        function clearSearch() { document.getElementById('searchInput').value = ''; updateUI(); }
+        function setCategory(c) {
+            activeCat = c;
+            renderCats();
+            updateUI();
+        }
 
+        // 核心：更新列表界面（包含搜索高亮和库存逻辑）
         function updateUI() {
             const kw = document.getElementById('searchInput').value.trim().toLowerCase();
-            document.getElementById('clearBtn').style.display = kw ? 'block' : 'none';
-            let filtered = products.filter(p => (activeCat === '全部' || (p.category || '未分类') === activeCat) && (p.name.toLowerCase().includes(kw) || (p.description || '').toLowerCase().includes(kw)));
             
-            document.getElementById('productGrid').innerHTML = filtered.map(p => {
-                const stock = Number(p.stock) || 0;
-                const sCol = stock === 0 ? 'var(--danger)' : (stock <= 2 ? 'var(--warn)' : 'var(--safe)');
+            // 过滤逻辑
+            let filtered = products.filter(p => {
+                const matchCat = (activeCat === '全部' || (p.category || '未分类') === activeCat);
+                const matchSearch = (p.name.toLowerCase().includes(kw) || (p.description || '').toLowerCase().includes(kw));
+                return matchCat && matchSearch;
+            });
+
+            const grid = document.getElementById('productGrid');
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#94a3b8;">未找到相关物品</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => {
+                // 库存颜色逻辑
+                const s = Number(p.stock) || 0;
+                let sCol = 'var(--safe)'; // 默认绿色
+                if (s === 0) sCol = 'var(--danger)'; // 0件红色
+                else if (s <= 2) sCol = 'var(--warn)'; // 1-2件橙色
+
                 const img = (p.image_url || "").split(',')[0].trim();
+                
+                // 搜索文字高亮处理
                 const dTitle = kw ? p.name.replace(new RegExp(kw, 'gi'), m => `<span class="highlight">${m}</span>`) : p.name;
 
                 return `
                 <a href="product.html?id=${p.id}" class="card">
                     <div class="img-container">
-                        ${img ? `<img src="${img}" onload="this.classList.add('loaded')" onerror="this.outerHTML='<span>图损</span>'">` : '<span>无图</span>'}
+                        ${img ? `<img src="${img}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">` : '<span>无图片</span>'}
                     </div>
                     <div class="info">
                         <div class="price">¥${p.price}</div>
                         <div class="title">${dTitle}</div>
                         <div class="meta">
                             <span class="cat-label">${p.category || '未分类'}</span>
-                            <div class="stock-dot" style="background:${sCol}">${stock}</div>
+                            <span class="stock-tag" style="background:${sCol}">库存 (${s})</span>
                         </div>
                     </div>
                 </a>`;
             }).join('');
         }
+
         init();
     </script>
 </body>
