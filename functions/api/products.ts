@@ -1,47 +1,54 @@
-export async function onRequest(context: { request: Request; env: any }) {
+/**
+ * Universal Backend V2.0
+ * 说明：这是一个容错性极强的后端，可以处理任意类型的 price 字段
+ */
+export async function onRequest(context) {
   const { request, env } = context;
-
-  // 从环境变量获取配置（确保你在 Cloudflare Pages 后台设置了这两个变量）
-  const SUPABASE_URL = env.SUPABASE_URL;
-  const SUPABASE_KEY = env.SUPABASE_KEY;
-
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return new Response(JSON.stringify({ error: "服务器配置缺失" }), { status: 500 });
-  }
-
   const url = new URL(request.url);
-  const id = url.searchParams.get("id");
-  const category = url.searchParams.get("category");
+  const id = url.searchParams.get('id');
 
-  // 基础查询：只查上架商品，包含所有必要字段
-  let query = "is_active=eq.true&select=id,name,price,currency,stock,image_url,description,category&order=id.asc";
+  // 构建 Supabase 客户端
+  const supabaseUrl = env.SUPABASE_URL;
+  const supabaseKey = env.SUPABASE_KEY;
 
-  // 如果传了 ID，改为单商品查询
-  if (id) {
-    query = `id=eq.${id}&select=id,name,price,currency,stock,image_url,description,category`;
-  } else if (category && category !== '全部') {
-    query += `&category=eq.${encodeURIComponent(category)}`;
-  }
+  // 简单的 CORS 头，允许网页跨域访问
+  const headers = {
+    "Content-Type": "application/json;charset=UTF-8",
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "no-cache" // 禁用 API 缓存，确保数据最新
+  };
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/products?${query}`, {
+    let queryUrl = `${supabaseUrl}/rest/v1/products`;
+    
+    // 如果有 ID，就只查那一个；没有 ID，就查全部
+    if (id) {
+      queryUrl += `?id=eq.${id}&select=*`;
+    } else {
+      queryUrl += `?select=*&order=id.desc`; // 按 ID 倒序排列，新录入的在前面
+    }
+
+    const response = await fetch(queryUrl, {
+      method: 'GET',
       headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "apikey": supabaseKey,
+        "Authorization": `Bearer ${supabaseKey}`,
         "Content-Type": "application/json"
       }
     });
 
-    const data = await res.json();
+    if (!response.ok) {
+      throw new Error(`DB Error: ${response.status} ${response.statusText}`);
+    }
 
-    return new Response(JSON.stringify(data), {
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=1", // 这里改为 1 秒，解决更新慢的问题
-        "Access-Control-Allow-Origin": "*"
-      }
-    });
+    const data = await response.json();
+
+    return new Response(JSON.stringify(data), { headers });
+
   } catch (err) {
-    return new Response(JSON.stringify({ error: "数据库连接失败" }), { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), { 
+      status: 500, 
+      headers 
+    });
   }
 }
