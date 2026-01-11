@@ -3,430 +3,367 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>云端库存智能终端 - 首页</title>
+    <title>物品库存看板 - 纯净版</title>
     <style>
-        /* * 1. 全局设计变量系统 (Design Tokens)
-         * ----------------------------------------
-         */
+        /* =========================================
+           1. DESIGN TOKENS (设计变量系统)
+           ========================================= */
         :root {
-            /* 主色调 */
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --primary-light: rgba(79, 70, 229, 0.08);
+            /* 品牌色 */
+            --brand-primary: #6366f1;       /* 靛蓝 */
+            --brand-hover: #4f46e5;
+            --brand-light: #e0e7ff;
             
-            /* 功能色 */
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
+            /* 状态色 */
+            --state-success: #10b981;
+            --state-warning: #f59e0b;
+            --state-danger: #ef4444;        /* 用于价格高亮 */
             
-            /* 背景与文字 */
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --text-main: #0f172a;
-            --text-sub: #64748b;
-            --text-muted: #94a3b8;
-            --border: #e2e8f0;
+            /* 中性色 */
+            --bg-page: #f8fafc;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --border-light: #e2e8f0;
 
-            /* 尺寸与间距 */
+            /* 布局参数 */
             --header-height: 64px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --space-container: 16px;
-
-            /* 阴影系统 */
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05);
-            --shadow-float: 0 10px 15px -3px rgba(0,0,0,0.1);
-
-            /* 动画曲线 */
-            --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-            --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+            --card-radius: 12px;
+            --container-padding: 16px;
+            
+            /* 阴影与动效 */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* * 2. 基础重置 (Reset)
-         * ----------------------------------------
-         */
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        /* =========================================
+           2. RESET & BASE (基础重置)
+           ========================================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            line-height: 1.5;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
             padding-top: var(--header-height);
             min-height: 100vh;
         }
 
-        /* * 3. 顶部导航栏 (Fixed Header)
-         * ----------------------------------------
-         */
-        .app-header {
+        /* =========================================
+           3. HEADER COMPONENT (顶部导航)
+           ========================================= */
+        .header-fixed {
             position: fixed; top: 0; left: 0; right: 0;
             height: var(--header-height);
             background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            z-index: 1000;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-light);
+            z-index: 999;
             display: flex; align-items: center; justify-content: center;
-            padding: 0 var(--space-container);
-            box-shadow: var(--shadow-sm);
+            padding: 0 var(--container-padding);
         }
 
-        .search-wrapper {
-            width: 100%; max-width: 800px; position: relative;
+        .search-box {
+            position: relative; width: 100%; max-width: 600px;
         }
 
-        .search-icon-svg {
+        .search-icon {
             position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-            color: var(--text-muted); pointer-events: none;
+            color: var(--text-tertiary); pointer-events: none;
         }
 
         .search-input {
-            width: 100%; height: 40px;
-            padding: 0 16px 0 42px;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            background: var(--bg-body);
-            font-size: 14px; color: var(--text-main);
-            transition: all 0.3s var(--ease-smooth);
-            appearance: none;
+            width: 100%; height: 40px; padding: 0 16px 0 44px;
+            background: var(--bg-page); border: 1px solid transparent;
+            border-radius: 20px; font-size: 14px; color: var(--text-primary);
+            transition: var(--transition-base); outline: none;
         }
 
         .search-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: #fff;
-            box-shadow: 0 0 0 4px var(--primary-light);
+            background: #fff; border-color: var(--brand-primary);
+            box-shadow: 0 0 0 4px var(--brand-light);
         }
 
-        /* * 4. 主要内容区 (Grid Layout)
-         * ----------------------------------------
-         */
-        .main-container {
+        /* =========================================
+           4. GRID LAYOUT (网格系统)
+           ========================================= */
+        .container {
             max-width: 1200px; margin: 0 auto;
-            padding: 20px var(--space-container);
+            padding: 20px var(--container-padding);
         }
 
-        .grid-system {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 默认双列 */
-            gap: 16px;
+        .grid-wrapper {
+            display: grid; gap: 16px;
+            /* 智能响应：手机双列，平板三列，电脑四列 */
+            grid-template-columns: repeat(2, 1fr);
         }
+        @media (min-width: 640px) { .grid-wrapper { grid-template-columns: repeat(3, 1fr); } }
+        @media (min-width: 1024px) { .grid-wrapper { grid-template-columns: repeat(4, 1fr); gap: 24px; } }
 
-        /* 大屏适配四列 */
-        @media (min-width: 768px) {
-            .grid-system { grid-template-columns: repeat(4, 1fr); gap: 24px; }
-        }
-
-        /* * 5. 商品卡片组件 (Product Card)
-         * ----------------------------------------
-         */
+        /* =========================================
+           5. PRODUCT CARD (核心卡片 - 自由文本版)
+           ========================================= */
         .card {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
+            background: var(--bg-surface);
+            border-radius: var(--card-radius);
+            border: 1px solid var(--border-light);
             overflow: hidden;
-            border: 1px solid var(--border);
-            text-decoration: none;
-            color: inherit;
             display: flex; flex-direction: column;
-            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none; color: inherit;
+            transition: var(--transition-base);
+            box-shadow: var(--shadow-sm);
             position: relative;
         }
 
         .card:active { transform: scale(0.98); }
-        .card:hover { 
-            transform: translateY(-4px); 
-            box-shadow: var(--shadow-float);
-            border-color: var(--primary-light);
-        }
+        .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 
-        /* 图片区域 */
-        .card-img-box {
+        /* 图片容器 */
+        .card-thumb {
             width: 100%; aspect-ratio: 1 / 1;
-            background: #f1f5f9;
-            position: relative; overflow: hidden;
+            background: #f1f5f9; position: relative; overflow: hidden;
         }
 
         .card-img {
             width: 100%; height: 100%; object-fit: cover;
-            transition: opacity 0.3s ease;
+            transition: transform 0.5s ease;
         }
+        .card:hover .card-img { transform: scale(1.08); }
 
-        /* 库存徽章 */
-        .stock-tag {
+        /* 库存角标 */
+        .stock-badge {
             position: absolute; top: 8px; right: 8px;
+            padding: 3px 8px; border-radius: 4px;
             font-size: 10px; font-weight: 800;
-            padding: 4px 8px; border-radius: 6px;
             text-transform: uppercase; letter-spacing: 0.5px;
-            backdrop-filter: blur(4px);
-            z-index: 2;
+            backdrop-filter: blur(4px); color: #fff; z-index: 2;
         }
-        .stock-ok { background: rgba(16, 185, 129, 0.9); color: #fff; }
-        .stock-low { background: rgba(239, 68, 68, 0.9); color: #fff; }
+        .stock-high { background: rgba(16, 185, 129, 0.9); }
+        .stock-low { background: rgba(239, 68, 68, 0.9); }
 
-        /* 信息区域 */
-        .card-info {
-            padding: 12px;
-            flex: 1; display: flex; flex-direction: column;
-        }
-
-        /* 价格行核心样式 */
-        .price-row {
-            display: flex; align-items: baseline;
-            color: var(--danger); margin-bottom: 6px;
-        }
-        .currency { font-size: 12px; font-weight: 700; margin-right: 2px; }
-        .amount { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
-        .unit { 
-            font-size: 12px; color: var(--text-sub); 
-            margin-left: 4px; font-weight: 400; 
+        /* 内容区域 */
+        .card-content {
+            padding: 12px; flex: 1;
+            display: flex; flex-direction: column;
         }
 
-        .item-title {
-            font-size: 14px; font-weight: 600; color: var(--text-main);
-            line-height: 1.4;
-            height: 40px; /* 限制两行高度 */
-            overflow: hidden; text-overflow: ellipsis;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        /* [核心修改] 自由价格文本样式 */
+        .price-display {
+            color: var(--state-danger);
+            font-size: 16px; font-weight: 700;
+            line-height: 1.4; margin-bottom: 6px;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .item-name {
+            font-size: 14px; font-weight: 500; line-height: 1.4;
+            color: var(--text-primary);
             margin-bottom: 12px;
+            /* 限制两行 */
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; height: 2.8em;
         }
 
         .card-footer {
-            margin-top: auto; padding-top: 8px;
-            border-top: 1px dashed var(--border);
+            margin-top: auto; padding-top: 10px;
+            border-top: 1px dashed var(--border-light);
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        .cat-badge {
-            font-size: 10px; color: var(--primary);
-            background: var(--primary-light);
+        .tag-cat {
+            font-size: 10px; color: var(--brand-primary);
+            background: var(--brand-light);
             padding: 2px 8px; border-radius: 4px; font-weight: 600;
         }
 
-        .stock-num { font-size: 10px; color: var(--text-muted); }
+        .text-stock { font-size: 11px; color: var(--text-tertiary); }
 
-        /* * 6. 状态反馈组件 (Loading & Error)
-         * ----------------------------------------
-         */
-        /* 骨架屏动画 */
+        /* =========================================
+           6. UTILITIES (工具类)
+           ========================================= */
+        /* 骨架屏 */
         .skeleton {
             background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+            background-size: 200% 100%; animation: shimmer 1.5s infinite;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* 全局 Toast 通知 */
-        #toast-box {
+        /* Toast 提示 */
+        #toast-container {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+            z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
         }
-        .toast-msg {
+        .toast {
             background: rgba(15, 23, 42, 0.95); color: #fff;
             padding: 10px 20px; border-radius: 50px;
             font-size: 13px; font-weight: 500;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            animation: slideUp 0.3s var(--ease-bounce);
+            animation: slideUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* 空状态提示 */
-        .empty-state {
-            grid-column: 1 / -1;
-            padding: 60px 0; text-align: center; color: var(--text-muted);
-        }
-        .refresh-btn {
-            margin-top: 15px; padding: 8px 20px;
-            background: #fff; border: 1px solid var(--border);
-            border-radius: 20px; color: var(--primary); font-size: 13px;
-            cursor: pointer;
-        }
-        
         /* 搜索高亮 */
-        .highlight { background-color: #fde047; color: #000; padding: 0 2px; border-radius: 2px; }
+        .highlight-text { background-color: #fef08a; color: #854d0e; border-radius: 2px; padding: 0 2px; }
+
+        .empty-state {
+            grid-column: 1 / -1; text-align: center; padding: 60px 0; color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
 
-    <div id="toast-box"></div>
-
-    <header class="app-header">
-        <div class="search-wrapper">
-            <svg class="search-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="searchInput" class="search-input" placeholder="搜索商品名称、ID或单位..." oninput="handleSearch()">
+    <header class="header-fixed">
+        <div class="search-box">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索名称、价格或分类..." oninput="handleSearch()">
         </div>
     </header>
 
-    <main class="main-container">
-        <div id="productGrid" class="grid-system">
-            <div class="card"><div class="card-img-box skeleton"></div><div class="card-info"><div class="skeleton" style="height:20px;width:70%;margin-bottom:8px;"></div><div class="skeleton" style="height:40px;width:100%;"></div></div></div>
-            <div class="card"><div class="card-img-box skeleton"></div><div class="card-info"><div class="skeleton" style="height:20px;width:70%;margin-bottom:8px;"></div><div class="skeleton" style="height:40px;width:100%;"></div></div></div>
-            <div class="card"><div class="card-img-box skeleton"></div><div class="card-info"><div class="skeleton" style="height:20px;width:70%;margin-bottom:8px;"></div><div class="skeleton" style="height:40px;width:100%;"></div></div></div>
-            <div class="card"><div class="card-img-box skeleton"></div><div class="card-info"><div class="skeleton" style="height:20px;width:70%;margin-bottom:8px;"></div><div class="skeleton" style="height:40px;width:100%;"></div></div></div>
+    <main class="container">
+        <div id="productGrid" class="grid-wrapper">
+            <div class="card"><div class="card-thumb skeleton"></div><div class="card-content"><div class="skeleton" style="height:20px;width:50%;margin-bottom:10px;"></div><div class="skeleton" style="height:40px;width:100%;"></div></div></div>
+            <div class="card"><div class="card-thumb skeleton"></div><div class="card-content"><div class="skeleton" style="height:20px;width:50%;margin-bottom:10px;"></div><div class="skeleton" style="height:40px;width:100%;"></div></div></div>
         </div>
     </main>
 
+    <div id="toast-container"></div>
+
     <script>
         // ==========================================
-        // 1. 全局状态管理
+        // 1. 全局状态 (State Management)
         // ==========================================
         const AppState = {
-            allData: [],      // 存储所有从API获取的数据
-            searchKey: '',    // 当前搜索关键词
-            isError: false    // 是否发生错误
+            data: [],           // 原始数据
+            filtered: [],       // 过滤后数据
+            isOffline: false    // 是否离线模式
         };
 
         // ==========================================
-        // 2. 数据获取模块 (Fetch)
+        // 2. 启动逻辑 (Bootstrap)
         // ==========================================
-        async function fetchProducts() {
-            showToast('正在同步云端数据...', 'info');
-            const grid = document.getElementById('productGrid');
-            
+        async function initApp() {
+            showToast('正在连接云端数据库...');
             try {
-                // 添加时间戳参数，防止浏览器缓存旧数据
-                const timestamp = new Date().getTime();
-                const response = await fetch(`/api/products?t=${timestamp}`);
+                // 加随机数防止 GET 请求缓存
+                const res = await fetch(`/api/products?_t=${Date.now()}`);
+                if (!res.ok) throw new Error(`API Error: ${res.status}`);
                 
-                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                const json = await res.json();
+                AppState.data = json;
+                AppState.filtered = json;
 
-                AppState.allData = await response.json();
-                
-                // 模拟网络延迟让骨架屏展示一会儿（提升体验）
+                // 模拟流畅的加载过渡
                 setTimeout(() => {
-                    renderGrid(AppState.allData);
-                    showToast('数据更新成功', 'success');
-                }, 300);
+                    renderGrid(AppState.data);
+                    showToast('数据同步完成', 'success');
+                }, 400);
 
             } catch (err) {
-                console.error("Data Fetch Error:", err);
-                AppState.isError = true;
-                showErrorState();
-                showToast('网络连接失败', 'error');
+                console.error(err);
+                AppState.isOffline = true;
+                document.getElementById('productGrid').innerHTML = `
+                    <div class="empty-state">
+                        <h3>网络连接失败</h3>
+                        <p>请检查网络或后端配置</p>
+                        <button onclick="location.reload()" style="margin-top:15px;padding:8px 20px;border-radius:20px;border:1px solid #ccc;background:#fff;">刷新重试</button>
+                    </div>`;
             }
         }
 
         // ==========================================
-        // 3. 渲染引擎 (Render)
+        // 3. 渲染引擎 (Core Render) - [简化版]
         // ==========================================
-        function renderGrid(data) {
+        function renderGrid(items) {
             const grid = document.getElementById('productGrid');
-            grid.innerHTML = ''; // 清空骨架屏
-
-            // 空数据处理
-            if (!data || data.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5">
-                            <path d="M10 21h4a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2v-2a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2z"></path>
-                        </svg>
-                        <p style="margin-top:10px">暂无符合条件的商品</p>
-                    </div>`;
+            
+            if (!items || items.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><p>没有找到相关商品</p></div>`;
                 return;
             }
 
-            // 遍历生成卡片
-            const htmlBuffer = data.map(item => {
-                // [核心修复] 单位字段清洗逻辑
-                // 1. 优先取 item.unit，其次取 item.Unit
-                // 2. 转为字符串并去除首尾空格
-                // 3. 排除 "NULL", "null", "undefined" 字符串
-                const rawUnit = item.unit || item.Unit || "";
-                const cleanUnit = String(rawUnit).trim();
-                const shouldShowUnit = cleanUnit && 
-                                       cleanUnit.toUpperCase() !== "NULL" && 
-                                       cleanUnit.toLowerCase() !== "undefined";
+            const html = items.map(item => {
+                // 1. 图片处理
+                const imgUrl = (item.image_url || '').split(',')[0] || '';
                 
-                // 构造单位 HTML
-                const unitHtml = shouldShowUnit ? `<span class="unit">/ ${cleanUnit}</span>` : '';
-
-                // 图片容错
-                const imgUrl = (item.image_url || '').split(',')[0] || 'https://via.placeholder.com/300x300?text=No+Image';
-
-                // 库存逻辑
+                // 2. 库存状态
                 const stock = parseInt(item.stock) || 0;
-                const stockClass = stock > 10 ? 'stock-ok' : 'stock-low';
-                const stockText = stock > 10 ? '现货' : '紧张';
+                const badgeClass = stock > 10 ? 'stock-high' : 'stock-low';
+                const badgeText = stock > 10 ? '现货' : '紧张';
 
-                // 高亮处理名称
-                const displayName = highlightText(item.name, AppState.searchKey);
+                // 3. 价格处理 (核心修改点)
+                // 直接读取 item.price，不加任何符号，不判断 unit
+                // 如果为空，显示默认提示
+                const priceText = item.price ? item.price : "暂无标价";
 
+                // 4. 搜索高亮逻辑
+                const keyword = document.getElementById('searchInput').value.trim();
+                const displayName = highlight(item.name, keyword);
+                
+                // 5. 组装 HTML
                 return `
                 <a href="product.html?id=${item.id}" class="card">
-                    <div class="card-img-box">
-                        <div class="stock-tag ${stockClass}">${stockText}</div>
-                        <img src="${imgUrl}" class="card-img" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=Error'">
+                    <div class="card-thumb">
+                        <div class="stock-badge ${badgeClass}">${badgeText}</div>
+                        <img src="${imgUrl}" class="card-img" loading="lazy" 
+                             onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                     </div>
-                    <div class="card-info">
-                        <div class="price-row">
-                            <span class="currency">${item.currency || '¥'}</span>
-                            <span class="amount">${item.price}</span>
-                            ${unitHtml}
-                        </div>
-                        <h3 class="item-title">${displayName}</h3>
+                    <div class="card-content">
+                        <div class="price-display">${priceText}</div>
+                        
+                        <h3 class="item-name">${displayName}</h3>
+                        
                         <div class="card-footer">
-                            <span class="cat-badge">${item.category || '默认'}</span>
-                            <span class="stock-num">库存: ${stock}</span>
+                            <span class="tag-cat">${item.category || '未分类'}</span>
+                            <span class="text-stock">库存: ${stock}</span>
                         </div>
                     </div>
-                </a>
-                `;
+                </a>`;
             }).join('');
 
-            grid.innerHTML = htmlBuffer;
+            grid.innerHTML = html;
         }
 
         // ==========================================
-        // 4. 搜索模块 (Search)
+        // 4. 搜索模块 (Search Logic)
         // ==========================================
-        let searchDebounce = null;
-
+        let searchTimer = null;
         function handleSearch() {
-            clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(() => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
                 const input = document.getElementById('searchInput');
-                AppState.searchKey = input.value.trim().toLowerCase();
-                
-                if (!AppState.searchKey) {
-                    renderGrid(AppState.allData);
-                    return;
-                }
+                const val = input.value.trim().toLowerCase();
 
-                // 模糊匹配：名称 + 描述 + 类别
-                const filtered = AppState.allData.filter(item => {
-                    const text = `${item.name} ${item.description} ${item.category} ${item.unit}`.toLowerCase();
-                    return text.includes(AppState.searchKey);
+                // 简单的多字段匹配
+                const filtered = AppState.data.filter(item => {
+                    const str = `${item.name} ${item.category} ${item.price}`.toLowerCase();
+                    return str.includes(val);
                 });
 
                 renderGrid(filtered);
             }, 250); // 250ms 防抖
         }
 
-        function highlightText(text, keyword) {
-            if (!keyword) return text;
-            const regex = new RegExp(`(${keyword})`, 'gi');
-            return text.replace(regex, '<span class="highlight">$1</span>');
+        function highlight(text, key) {
+            if (!key) return text;
+            const regex = new RegExp(`(${key})`, 'gi');
+            return text.replace(regex, '<span class="highlight-text">$1</span>');
         }
 
         // ==========================================
-        // 5. 辅助功能 (Utilities)
+        // 5. 反馈组件 (Toast)
         // ==========================================
-        function showToast(msg, type = 'info') {
-            const box = document.getElementById('toast-box');
+        function showToast(msg, type = 'normal') {
+            const container = document.getElementById('toast-container');
             const el = document.createElement('div');
-            el.className = 'toast-msg';
-            el.innerHTML = msg;
+            el.className = 'toast';
+            el.innerText = msg;
             
-            if(type === 'error') el.style.background = 'rgba(239, 68, 68, 0.95)';
-            if(type === 'success') el.style.background = 'rgba(16, 185, 129, 0.95)';
-
-            box.appendChild(el);
+            if (type === 'success') el.style.background = 'rgba(16, 185, 129, 0.95)';
+            
+            container.appendChild(el);
             setTimeout(() => {
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(20px)';
@@ -434,17 +371,9 @@
             }, 2000);
         }
 
-        function showErrorState() {
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = `
-                <div class="empty-state">
-                    <p>网络连接失败，请检查设置</p>
-                    <button class="refresh-btn" onclick="fetchProducts()">点击重试</button>
-                </div>`;
-        }
+        // 初始化
+        window.addEventListener('DOMContentLoaded', initApp);
 
-        // 初始化执行
-        window.addEventListener('DOMContentLoaded', fetchProducts);
     </script>
 </body>
 </html>
